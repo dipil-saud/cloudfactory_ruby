@@ -56,7 +56,7 @@ module CF # :nodoc: all
             Hashie::Mash.new(new_response)
           end
         else
-          response
+          JSON.load(response)
         end
       end
     end

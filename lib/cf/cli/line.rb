@@ -271,10 +271,9 @@ module Cf # :nodoc: all
       set_api_key(yaml_source)
       CF.account_name = CF::Account.info.name
       lines = CF::Line.all
-      lines.sort! {|a, b| a[:name] <=> b[:name] }
-      say "\n"
-      say("No Lines", :yellow) if lines.blank?
 
+      if lines.present?
+      lines.sort! {|a, b| a[:name] <=> b[:name] }
       lines_table = table do |t|
         t.headings = ["Line Title", 'URL']
         lines.each do |line|
@@ -282,6 +281,9 @@ module Cf # :nodoc: all
         end
       end
       say(lines_table)
+      else
+        say("You dont have any lines to list.", :yellow)
+      end
     end
 
     # helper function like in Rails
