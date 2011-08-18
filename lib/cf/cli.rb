@@ -22,6 +22,10 @@ require "#{cli_directory}/line_yaml_validator"
 
 if ENV['TEST']
   require 'ruby-debug'
+  require 'awesome_print'
+  require 'active_support/time_with_zone'
+  ::Debugger.start
+  ::Debugger.settings[:autoeval] = true if ::Debugger.respond_to?(:settings)
 end
 
 module Cf # :nodoc: all

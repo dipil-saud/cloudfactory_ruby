@@ -81,4 +81,5 @@ EOF
   s.add_development_dependency "rake"
   s.add_development_dependency "webmock"
   s.add_development_dependency "timecop"
+  s.add_development_dependency "awesome_print"
 end
