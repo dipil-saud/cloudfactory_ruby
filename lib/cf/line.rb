@@ -299,15 +299,17 @@ module CF
           @station_input_formats << i.to_hash
         end
         @station_form_fields = []
-        s.form_fields.each do |f|
-          @station_form_fields << f.to_hash
+        @temp_station = s.to_hash
+        if !s.form_fields.nil?
+          s.form_fields.each do |f|
+            @station_form_fields << f.to_hash
+          end
+          @temp_station.delete("form_fields")
+          @temp_station.merge!("form_fields" => @station_form_fields)
         end
-        temp_station = s.to_hash
-        temp_station.delete("form_fields")
-        temp_station.merge!("form_fields" => @station_form_fields)
-        temp_station.delete("input_formats")
-        temp_station.merge!("input_formats" => @station_input_formats)
-        @stations << temp_station
+        @temp_station.delete("input_formats")
+        @temp_station.merge!("input_formats" => @station_input_formats)
+        @stations << @temp_station
       end
       send_resp.delete("stations")
       send_resp.merge!("stations" => @stations)

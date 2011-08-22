@@ -367,9 +367,59 @@ describe CF::Line do
         end
         line_details = CF::Line.inspect("line_details")
         line_input_format_id = line_details['input_formats'].first['id']
-        from_field_id = line_details['stations'].first['form_fields'].first['id']
+        form_field_id = line_details['stations'].first['form_fields'].first['id']
         station_input_format_id = line_details['stations'].first['input_formats'].first['id']
-        line_details.should eql({"title"=>"line_details", "description"=>"", "public"=>false, "department"=>{"name"=>"Digitization"}, "app"=>{"name"=>"default", "email"=>"manish.das@sprout-technology.com", "notification_url"=>"http://www.cloudfactory.com"}, "code"=>200, "input_formats"=>[{"id"=>"#{line_input_format_id}", "name"=>"Company", "required"=>true, "valid_type"=>"general", "source_station_index"=>0}], "stations"=>[{"index"=>1, "type"=>"WorkStation", "worker"=>{"number"=>1, "reward"=>20, "type"=>"HumanWorker", "stat_badge"=>{"approval_rating"=>80, "abandonment_rate"=>30, "country"=>nil}}, "form"=>{"title"=>"Enter text from a business card image", "instruction"=>"Describe"}, "form_fields"=>[{"id"=>"#{from_field_id}", "label"=>"First Name", "field_type"=>"short_answer", "hint"=>nil, "required"=>true, "unique"=>nil, "hide_label"=>nil, "value"=>nil}], "input_formats"=>[{"id"=>"#{station_input_format_id}", "name"=>"Company", "required"=>true, "valid_type"=>"general", "source_station_index"=>0}]}]})
+        line_details.should eql({"title"=>"line_details", "description"=>"", "public"=>false, "department"=>{"name"=>"Digitization"}, "app"=>{"name"=>"default", "email"=>"manish.das@sprout-technology.com", "notification_url"=>"http://www.cloudfactory.com"}, "code"=>200, "input_formats"=>[{"id"=>"#{line_input_format_id}", "name"=>"Company", "required"=>true, "valid_type"=>"general", "source_station_index"=>0}], "stations"=>[{"index"=>1, "type"=>"WorkStation", "worker"=>{"number"=>1, "reward"=>20, "type"=>"HumanWorker", "stat_badge"=>{"approval_rating"=>80, "abandonment_rate"=>30, "country"=>nil}}, "form"=>{"title"=>"Enter text from a business card image", "instruction"=>"Describe"}, "form_fields"=>[{"id"=>"#{form_field_id}", "label"=>"First Name", "field_type"=>"short_answer", "hint"=>nil, "required"=>true, "unique"=>nil, "hide_label"=>nil, "value"=>nil}], "input_formats"=>[{"id"=>"#{station_input_format_id}", "name"=>"Company", "required"=>true, "valid_type"=>"general", "source_station_index"=>0}]}]})
+      end
+    end
+    
+    it "for robot worker" do
+      VCR.use_cassette "lines/block/line-details_robot_worker", :record => :new_episodes do
+      # WebMock.allow_net_connect!
+        line = CF::Line.create("line_details_robot","Digitization") do |l|
+          CF::InputFormat.new({:line => l, :name => "text", :valid_type => "general", :required => "true"})
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::RobotWorker.create({:station => s, :type => "entity_extraction_robot", :settings => {:document => ["Franz Kafka and George Orwell are authors. Ludwig Von Beethoven and Mozart are musicians. China and Japan are countries"]}})
+          end
+        end
+        line_details = CF::Line.inspect("line_details_robot")
+        line_input_format_id = line_details['input_formats'].first['id']
+        station_input_format_id = line_details['stations'].first['input_formats'].first['id']
+        worker_id = line_details['stations'].first['worker']['id']
+        line_details.should eql({"title"=>"line_details_robot", "description"=>"", "department"=>"Digitization", "code"=>200, "input_formats"=>[{"id"=>"#{line_input_format_id}", "name"=>"text", "required"=>true, "valid_type"=>"general"}], "stations"=>[{"index"=>1, "type"=>"WorkStation", "worker"=>{"id"=>"#{worker_id}", "number"=>1, "reward"=>0.5, "type"=>"EntityExtractionRobot"}, "input_formats"=>[{"id"=>"#{station_input_format_id}", "name"=>"text", "required"=>true, "valid_type"=>"general"}]}]})
+      end
+    end
+    
+    it "with skill test feature" do
+      VCR.use_cassette "lines/block/line-details_skill_test", :record => :new_episodes do
+      # WebMock.allow_net_connect!
+        badge = 
+        {
+          :title => 'Football Fanatic', 
+          :description => "This qualification allows you to perform work at stations which have this badge.", 
+          :max_badges => 3, 
+          :test => 
+          {
+            :input => {:name => "Lionel Andres Messi", :country => "Argentina"},
+            :expected_output => 
+            [{:birthplace => "Rosario, Santa Fe, Argentina",:match_options => {:tolerance => 10, :ignore_case => true }},{:position => "CF",:match_options => {:tolerance => 1 }},{:"current-club" => "Barcelona",:match_options => {:tolerance => 1, :ignore_case => false }}]
+          }
+        }
+        line = CF::Line.create("line_details_skill_test", "Digitization") do |l|
+          CF::InputFormat.new({:line => l, :name => "image_url", :required => true, :valid_type => "url"})
+          CF::Station.create({:line =>l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20, :skill_badge => badge})
+            CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+              CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+            end
+          end
+        end
+        line_details = CF::Line.inspect("line_details_skill_test")
+        line_input_format_id = line_details['input_formats'].first['id']
+        station_input_format_id = line_details['stations'].first['input_formats'].first['id']
+        form_field_id = line_details['stations'].first['form_fields'].first['id']
+        worker_id = line_details['stations'].first['worker']['id']
+        line_details.should eql({"title"=>"line_details_skill_test", "description"=>"", "department"=>"Digitization", "code"=>200, "input_formats"=>[{"id"=>"#{line_input_format_id}", "name"=>"image_url", "required"=>true, "valid_type"=>"url"}], "stations"=>[{"index"=>1, "type"=>"WorkStation", "worker"=>{"id"=>"#{worker_id}", "number"=>1, "reward"=>20, "type"=>"HumanWorker", "stat_badge"=>{"abandonment_rate"=>30, "approval_rating"=>80, "country"=>nil, "adult"=>nil}, "skill_badge"=>nil}, "form"=>{"title"=>"Enter text from a business card image", "instruction"=>"Describe"}, "form_fields"=>[{"id"=>"#{form_field_id}", "label"=>"First Name", "field_type"=>"short_answer", "hint"=>nil, "required"=>true, "unique"=>nil, "hide_label"=>nil, "value"=>nil}], "input_formats"=>[{"id"=>"#{station_input_format_id}", "name"=>"image_url", "required"=>true, "valid_type"=>"url"}]}]})
       end
     end
   end
