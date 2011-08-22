@@ -109,7 +109,8 @@ module Cf # :nodoc: all
       set_api_key
       CF.account_name = CF::Account.info.name
       if options['line'].present?
-        runs = CF::Run.all(options['line'].parameterize)
+        line_title = options['line'].parameterize
+        runs = CF::Run.all(line_title)
       else
         runs = CF::Run.all
       end
@@ -128,7 +129,11 @@ module Cf # :nodoc: all
         end
       end
       say("\n")
-      say(runs_table)
+      if runs_table.rows.present?
+        say(runs_table)
+      else
+        say("No production run for line #{line_title}", :yellow)
+      end
     end
     
     desc "production resume", "resume a paused production run"
