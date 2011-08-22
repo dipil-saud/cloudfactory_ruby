@@ -16,7 +16,7 @@ module CF
           run = CF::Run.create(line, "content_scraping_robot_run", [{"url"=> "http://www.sprout-technology.com"}])
           
           output = run.final_output
-          output.first.final_output.first.scraped_link_from_document.should eql([["http://www.cloudfactory.com", "http://www.bizcardarmy.com"]])
+          output.first['scraped_link_from_document'].should eql([["http://www.cloudfactory.com", "http://www.bizcardarmy.com"]])
 
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)
@@ -42,7 +42,7 @@ module CF
           run = CF::Run.create(line, "content_scraping_robot_run_1", [{"url"=> "http://www.sprout-technology.com"}])
           
           output = run.final_output
-          output.first.final_output.first.scraped_link_from_document.should eql([["http://www.cloudfactory.com", "http://www.bizcardarmy.com"]])
+          output.first['scraped_link_from_document'].should eql([["http://www.cloudfactory.com", "http://www.bizcardarmy.com"]])
 
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)

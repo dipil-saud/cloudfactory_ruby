@@ -346,8 +346,8 @@ describe CF::Line do
         forced_delete = CF::Line.destroy("delete_line_of_run", :forced => true)
 
         search_line = CF::Line.find("delete_line_of_run")
-        search_line.code.should eql(404)
-        search_line.error.message.should eql("Line document not found using selector: {:public=>true, :title=>\"delete_line_of_run\"}")
+        search_line['code'].should eql(404)
+        search_line['error']['message'].should eql("Line document not found using selector: {:public=>true, :title=>\"delete_line_of_run\"}")
       end
     end
   end
@@ -370,6 +370,30 @@ describe CF::Line do
         from_field_id = line_details['stations'].first['form_fields'].first['id']
         station_input_format_id = line_details['stations'].first['input_formats'].first['id']
         line_details.should eql({"title"=>"line_details", "description"=>"", "public"=>false, "department"=>{"name"=>"Digitization"}, "app"=>{"name"=>"default", "email"=>"manish.das@sprout-technology.com", "notification_url"=>"http://www.cloudfactory.com"}, "code"=>200, "input_formats"=>[{"id"=>"#{line_input_format_id}", "name"=>"Company", "required"=>true, "valid_type"=>"general", "source_station_index"=>0}], "stations"=>[{"index"=>1, "type"=>"WorkStation", "worker"=>{"number"=>1, "reward"=>20, "type"=>"HumanWorker", "stat_badge"=>{"approval_rating"=>80, "abandonment_rate"=>30, "country"=>nil}}, "form"=>{"title"=>"Enter text from a business card image", "instruction"=>"Describe"}, "form_fields"=>[{"id"=>"#{from_field_id}", "label"=>"First Name", "field_type"=>"short_answer", "hint"=>nil, "required"=>true, "unique"=>nil, "hide_label"=>nil, "value"=>nil}], "input_formats"=>[{"id"=>"#{station_input_format_id}", "name"=>"Company", "required"=>true, "valid_type"=>"general", "source_station_index"=>0}]}]})
+      end
+    end
+  end
+  
+  context "get a line of other account" do
+    it "as public line" do
+      VCR.use_cassette "lines/plain-ruby/public-line", :record => :new_episodes do
+      # WebMock.allow_net_connect!
+        got_line = CF::Line.find("hero/dummy")
+        got_line['title'].should eql("dummy")
+        got_line['public'].should eql(true)
+        
+        run = CF::Run.create("hero/dummy", "dummy_run", [{"text" => "run for public line of another account"}])
+        run.title.should eql("dummy_run")
+        run.input.should eql([{"text" => "run for public line of another account"}])
+      end
+    end
+    
+    it "as private line" do
+      VCR.use_cassette "lines/plain-ruby/private-line", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+        got_line = CF::Line.find("hero/dummy_false")
+        got_line['code'].should eql(404)
+        got_line['error']['message'].should eql("Line with title: dummy_false under account hero is not public")
       end
     end
   end

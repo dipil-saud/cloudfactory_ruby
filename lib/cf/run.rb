@@ -31,14 +31,23 @@ module CF
         @line = line
         @line_title = line.title
       elsif line.class == String
-        @line_title = line
+        if line.split("/").count == 2
+          @account = line.split("/").first
+          @line_title = line.split("/").last
+        elsif line.split("/").count == 1
+          @line_title = line
+        end
       end
       @title = title
       if File.exist?(input.to_s)
         @file = input
         @param_data = File.new(input, 'rb')
         @param_for_input = :file
-        resp = self.class.post("/lines/#{CF.account_name}/#{@line_title.downcase}/runs.json", {:data => {:run => {:title => @title}}, @param_for_input => @param_data})
+        if line.class == String && line.split("/").count == 2
+          resp = self.class.post("/lines/#{@account}/#{@line_title.downcase}/runs.json", {:data => {:run => {:title => @title}}, @param_for_input => @param_data})
+        else
+          resp = self.class.post("/lines/#{CF.account_name}/#{@line_title.downcase}/runs.json", {:data => {:run => {:title => @title}}, @param_for_input => @param_data})
+        end
         if resp.code != 200
           self.errors = resp.error.message
         end
@@ -54,7 +63,11 @@ module CF
             :data =>{:run => { :title => @title }, :inputs => @param_data}
           }
         }
-        run =  HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{CF.account_name}/#{@line_title.downcase}/runs.json",options)
+        if line.class == String && line.split("/").count == 2
+          run =  HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{@account}/#{@line_title.downcase}/runs.json",options)
+        else
+          run =  HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{CF.account_name}/#{@line_title.downcase}/runs.json",options)
+        end
         if run.code != 200
           self.errors = run.parsed_response['error']['message']
         end

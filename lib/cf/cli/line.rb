@@ -132,6 +132,7 @@ module Cf # :nodoc: all
         line_title = line_dump['title'].parameterize
         line_description = line_dump['description']
         line_department = line_dump['department']
+        line_public = line_dump['public']
         
         line = CF::Line.info(line_title)
         if line.error.blank? && options.force? 
@@ -146,7 +147,7 @@ module Cf # :nodoc: all
             say("Line creation aborted!!", :yellow) and exit(1)
           end
         end
-        line = CF::Line.new(line_title, line_department, :description => line_description)
+        line = CF::Line.new(line_title, line_department, {:description => line_description, :public => line_public})
         say "Creating new assembly line: #{line.title}", :green
         say("Error: #{line.errors}", :red) and exit(1) if line.errors.present?
         

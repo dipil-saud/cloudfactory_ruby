@@ -207,9 +207,16 @@ module CF
     def self.find(line)
       if line.class == CF::Line
         resp = get("/lines/#{CF.account_name}/#{line.title.downcase}.json")
-      else
-        resp = get("/lines/#{CF.account_name}/#{line.downcase}.json")
+      elsif line.class == String
+        if line.split("/").count == 2
+          account = line.split("/").first
+          title = line.split("/").last
+          resp = get("/lines/#{account}/#{title.downcase}.json")
+        elsif line.split("/").count == 1
+          resp = get("/lines/#{CF.account_name}/#{line.downcase}.json")
+        end
       end
+      return resp.to_hash
     end
     
     # ==Returns all the lines of an account
