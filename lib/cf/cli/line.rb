@@ -283,7 +283,7 @@ module Cf # :nodoc: all
       lines = CF::Line.all
       lines.sort! {|a, b| a[:name] <=> b[:name] }
       say "\n"
-      say("No Lines", :yellow) if lines.blank?
+      say("You don't have any lines to list", :yellow) and return if lines.blank?
 
       lines_table = table do |t|
         t.headings = ["Line Title", 'URL']
