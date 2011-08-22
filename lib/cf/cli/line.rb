@@ -75,15 +75,24 @@ module Cf # :nodoc: all
           CF::Line.destroy(line_title, :forced => true)
           say("The line #{line_title} deleted forcefully!", :yellow)
         else
-          # say("!! Warning !!\nThe following are existing production runs based on this line.\n", :cyan)
-          # Cf::Production.new.list
-          say("!! Warning !!\nThere are existing production runs based on this line.\n", :yellow)
-          delete_forcefully = agree("Do you still want to delete this line? [y/n] ")
-          if delete_forcefully
-            CF::Line.destroy(line_title, :forced => true)
-            say("The line #{line_title} deleted successfully!", :yellow)
+          
+          # Check whether this line has existing runs or not
+          runs = CF::Run.all(line_title)
+          if runs.try(:error).blank?
+            say("!!! Warning !!!\nThe following are the existing production runs based on this line.", :cyan)
+            existing_runs = Cf::Production.new
+            existing_runs.options = {"line" => line_title}
+            existing_runs.list
+            delete_forcefully = agree("Do you still want to delete this line? [y/n] ")
+            if delete_forcefully
+              CF::Line.destroy(line_title, :forced => true)
+              say("The line #{line_title} deleted successfully!", :yellow)
+            else
+              say("Line deletion aborted!", :cyan)
+            end
           else
-            say("Line deletion aborted!", :cyan)
+            CF::Line.destroy(line_title)
+            say("The line #{line_title} deleted successfully!", :yellow)
           end
         end
       else
@@ -271,9 +280,10 @@ module Cf # :nodoc: all
       set_api_key(yaml_source)
       CF.account_name = CF::Account.info.name
       lines = CF::Line.all
-
-      if lines.present?
       lines.sort! {|a, b| a[:name] <=> b[:name] }
+      say "\n"
+      say("No Lines", :yellow) if lines.blank?
+
       lines_table = table do |t|
         t.headings = ["Line Title", 'URL']
         lines.each do |line|
@@ -281,9 +291,6 @@ module Cf # :nodoc: all
         end
       end
       say(lines_table)
-      else
-        say("You dont have any lines to list.", :yellow)
-      end
     end
 
     # helper function like in Rails
