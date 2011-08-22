@@ -70,7 +70,8 @@ module Cf # :nodoc: all
       end
       
       line = CF::Line.find(line_title)
-      if line.errors.blank?
+      line = Hashie::Mash.new(line)
+      if line.title == line_title
         if options.force
           CF::Line.destroy(line_title, :forced => true)
           say("The line #{line_title} deleted forcefully!", :yellow)
@@ -78,7 +79,7 @@ module Cf # :nodoc: all
           
           # Check whether this line has existing runs or not
           runs = CF::Run.all(line_title)
-          if runs.try(:error).blank?
+          if runs.class == Array and runs.present?
             say("!!! Warning !!!\nThe following are the existing production runs based on this line.", :cyan)
             existing_runs = Cf::Production.new
             existing_runs.options = {"line" => line_title}
