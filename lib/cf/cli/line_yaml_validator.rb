@@ -134,6 +134,13 @@ module Cf
 
                       instruction = custom_task_form['instruction']
                       errors << "Form Instruction is missing in Block station #{i+1}!" if instruction.nil?
+                      
+                      errors << "station_#{i+1} folder is missing! Create station_#{i+1} folder in #{Dir.pwd}" if !File.exist?("#{Dir.pwd}/station_#{i+1}")
+                      
+                      if File.exist?("#{Dir.pwd}/station_#{i+1}")
+                        station_source = "#{Dir.pwd}/station_#{i+1}"
+                        errors << "form.html is missing in folder #{Dir.pwd}/station_#{i+1} !" if !File.exist?("#{station_source}/form.html")
+                      end
                     end
                   elsif task_form.class == Hash
                     form_title = task_form['form_title']

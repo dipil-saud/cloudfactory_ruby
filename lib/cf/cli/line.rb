@@ -180,7 +180,7 @@ module Cf # :nodoc: all
 
         # Creation of Station
         stations = line_dump['stations']
-        stations.each do |station_file|
+        stations.each_with_index do |station_file, s_index|
           type = station_file['station']['station_type']
           index = station_file['station']['station_index']
           input_formats_for_station = station_file['station']['input_formats']
@@ -256,9 +256,9 @@ module Cf # :nodoc: all
               html_file = station_file['station']['custom_task_form']['html']
               html = File.read("#{line_source}/station_#{station_file['station']['station_index']}/#{html_file}")
               css_file = station_file['station']['custom_task_form']['css']
-              css = File.read("#{line_source}/station_#{station_file['station']['station_index']}/#{css_file}")
+              css = File.read("#{line_source}/station_#{station_file['station']['station_index']}/#{css_file}") if File.exist?("#{line_source}/station_#{s_index+1}/#{css_file}")
               js_file = station_file['station']['custom_task_form']['js']
-              js = File.read("#{line_source}/station_#{station_file['station']['station_index']}/#{js_file}")
+              js = File.read("#{line_source}/station_#{station_file['station']['station_index']}/#{js_file}") if File.exist?("#{line_source}/station_#{s_index+1}/#{js_file}")
               form = CF::CustomTaskForm.create({:station => s, :title => title, :instruction => instruction, :raw_html => html, :raw_css => css, :raw_javascript => js})
               say_status "form", "CustomTaskForm '#{form.title}'"
               display_error(line_title, "#{form.errors}") if form.errors.present?
