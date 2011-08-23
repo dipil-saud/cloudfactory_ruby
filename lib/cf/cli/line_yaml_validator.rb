@@ -2,7 +2,7 @@ module Cf
   class LineYamlValidator
 
     def self.validate(yaml_path)
-      line_dump = YAML::load(File.read(yaml_path))
+      line_dump = YAML::load(File.read(yaml_path).strip)
       errors = []
       # Checking Department
       if line_dump['department'].nil?

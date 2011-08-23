@@ -5,7 +5,7 @@ module Cf # :nodoc: all
     end
 
     def load_config
-      YAML::load(File.read(config_file)) if File.exist?(config_file)
+      YAML::load(File.read(config_file).strip) if File.exist?(config_file)
     end
 
     def save_config(target_url)
@@ -41,7 +41,7 @@ module Cf # :nodoc: all
     end
     
     def get_api_key(yaml_file)
-      yml = YAML::load(File.read(yaml_file))
+      yml = YAML::load(File.read(yaml_file).strip)
       yml[:api_key].presence || yml['api_key'].presence
     end
     

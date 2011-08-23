@@ -60,7 +60,7 @@ module Cf # :nodoc: all
         set_target_uri(false)
         set_api_key(yaml_source)
         CF.account_name = CF::Account.info.name
-        line_dump = YAML::load(File.open(yaml_source))
+        line_dump = YAML::load(File.read(yaml_source).strip)
         line_title = line_dump['title'].parameterize
       else
         set_target_uri(false)
@@ -138,7 +138,7 @@ module Cf # :nodoc: all
 
         CF.account_name = CF::Account.info.name
 
-        line_dump = YAML::load(File.open(yaml_source))
+        line_dump = YAML::load(File.read(yaml_source).strip)
         line_title = line_dump['title'].parameterize
         line_description = line_dump['description']
         line_department = line_dump['department']
@@ -301,6 +301,37 @@ module Cf # :nodoc: all
         text
       end
     }
+
+    desc "line inspect", "list the details of the line"
+    method_option :line, :type => :string, :aliases => "-l", :desc => "specify the line-title to inspect"
+    # method_option :verbose, :type => :boolean, :aliases => "-v", :desc => "gives the detailed structure of the line"
+    def inspect
+      if options['line'].blank?
+        line_source = Dir.pwd
+        yaml_source = "#{line_source}/line.yml"
+        say("The line.yml file does not exist in this directory", :red) and exit(1) unless File.exist?(yaml_source)
+        set_target_uri(false)
+        set_api_key(yaml_source)
+        CF.account_name = CF::Account.info.name
+
+        line_dump = YAML::load(File.read(yaml_source).strip)
+        line_title = line_dump['title'].parameterize
+      else
+        set_target_uri(false)
+        set_api_key
+        CF.account_name = CF::Account.info.name
+        line_title = options['line'].parameterize
+      end
+      
+      line = CF::Line.inspect(line_title)
+      line = Hashie::Mash.new(line)
+      if line.error.blank?
+        say("\nThe following is the structure of the line: #{line_title}\n", :green)
+        ap line
+      else
+        say("Error: #{line.error.message}\n", :red)
+      end
+    end
 
   end
 end

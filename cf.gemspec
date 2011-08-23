@@ -68,6 +68,7 @@ EOF
   s.add_dependency  "httparty", "~> 0.7"
   s.add_dependency  "terminal-table", "~> 1.4"
   s.add_dependency  "millisami-csv-hash"
+  s.add_dependency  "awesome_print"
   
   s.add_development_dependency 'ruby-debug19'
   s.add_development_dependency "aruba"
@@ -81,5 +82,4 @@ EOF
   s.add_development_dependency "rake"
   s.add_development_dependency "webmock"
   s.add_development_dependency "timecop"
-  s.add_development_dependency "awesome_print"
 end
