@@ -297,35 +297,41 @@ module CF
     
     def self.inspect(line_title)
       resp = get("/lines/#{CF.account_name}/#{line_title.downcase}/inspect.json")
-      send_resp = resp.to_hash
-      @line_input_formats = []
-      resp.input_formats.each do |l_i|
-        @line_input_formats << l_i.to_hash
-      end
-      send_resp.delete("input_formats")
-      send_resp.merge!("input_formats" => @line_input_formats)
-      @stations = []
-      resp.stations.each do |s|
-        @station_input_formats = []
-        s.input_formats.each do |i|
-          @station_input_formats << i.to_hash
+      if !resp.code == 200
+        send_resp = resp.to_hash
+        @line_input_formats = []
+        resp.input_formats.each do |l_i|
+          @line_input_formats << l_i.to_hash
         end
-        @station_form_fields = []
-        @temp_station = s.to_hash
-        if !s.form_fields.nil?
-          s.form_fields.each do |f|
-            @station_form_fields << f.to_hash
+        send_resp.delete("input_formats")
+        send_resp.merge!("input_formats" => @line_input_formats)
+        @stations = []
+      
+        resp.stations.each do |s|
+          @station_input_formats = []
+          s.input_formats.each do |i|
+            @station_input_formats << i.to_hash
           end
-          @temp_station.delete("form_fields")
-          @temp_station.merge!("form_fields" => @station_form_fields)
+          @station_form_fields = []
+          @temp_station = s.to_hash
+          if !s.form_fields.nil?
+            s.form_fields.each do |f|
+              @station_form_fields << f.to_hash
+            end
+            @temp_station.delete("form_fields")
+            @temp_station.merge!("form_fields" => @station_form_fields)
+          end
+          @temp_station.delete("input_formats")
+          @temp_station.merge!("input_formats" => @station_input_formats)
+          @stations << @temp_station
         end
-        @temp_station.delete("input_formats")
-        @temp_station.merge!("input_formats" => @station_input_formats)
-        @stations << @temp_station
+      
+        send_resp.delete("stations")
+        send_resp.merge!("stations" => @stations)
+        send_resp
+      else
+        resp
       end
-      send_resp.delete("stations")
-      send_resp.merge!("stations" => @stations)
-      return send_resp
     end
   end
 end
