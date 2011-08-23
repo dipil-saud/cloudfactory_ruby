@@ -23,7 +23,7 @@ module Cf # :nodoc: all
       CF.account_name = CF::Account.info.name
       
       if File.exist?("#{yaml_source}")
-        line_yaml_dump = YAML::load(File.open(yaml_source))
+        line_yaml_dump = YAML::load(File.read(yaml_source).strip)
         line_title = line_yaml_dump['title'].parameterize        
         line = CF::Line.find(line_title)
         line = Hashie::Mash.new(line)

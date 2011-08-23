@@ -60,7 +60,7 @@ module Cf # :nodoc: all
         set_target_uri(false)
         set_api_key(yaml_source)
         CF.account_name = CF::Account.info.name
-        line_dump = YAML::load(File.open(yaml_source))
+        line_dump = YAML::load(File.read(yaml_source).strip)
         line_title = line_dump['title'].parameterize
       else
         set_target_uri(false)
@@ -138,7 +138,7 @@ module Cf # :nodoc: all
 
         CF.account_name = CF::Account.info.name
 
-        line_dump = YAML::load(File.open(yaml_source))
+        line_dump = YAML::load(File.read(yaml_source).strip)
         line_title = line_dump['title'].parameterize
         line_description = line_dump['description']
         line_department = line_dump['department']
