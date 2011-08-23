@@ -59,14 +59,14 @@ Gem::Specification.new do |s|
 EOF
 
   s.add_dependency  "i18n"
-  s.add_dependency  "activesupport", '~> 3.0.3'
-  s.add_dependency  "hashie", "~> 1.0.0"
+  s.add_dependency  "activesupport", '~> 3.0'
+  s.add_dependency  "hashie", "~> 1.0"
   s.add_dependency  "rest-client"
   s.add_dependency  "json"
-  s.add_dependency  "thor", "~> 0.14.6"
+  s.add_dependency  "thor", "~> 0.14"
   s.add_dependency  "highline"
-  s.add_dependency  "httparty", "~> 0.7.8"
-  s.add_dependency  "terminal-table", "~> 1.4.2"
+  s.add_dependency  "httparty", "~> 0.7"
+  s.add_dependency  "terminal-table", "~> 1.4"
   s.add_dependency  "millisami-csv-hash"
   
   s.add_development_dependency 'ruby-debug19'
