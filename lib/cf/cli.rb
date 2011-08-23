@@ -8,6 +8,8 @@ require 'fileutils'
 require 'thor'
 require "highline/import"
 require 'csv-hash'
+require 'awesome_print'
+require 'active_support/time_with_zone'
 
 require File.expand_path('../../cf', __FILE__) #=> requiring the gem
 require 'active_support/core_ext/string/inflections'
@@ -22,8 +24,6 @@ require "#{cli_directory}/line_yaml_validator"
 
 if ENV['TEST']
   require 'ruby-debug'
-  require 'awesome_print'
-  require 'active_support/time_with_zone'
   ::Debugger.start
   ::Debugger.settings[:autoeval] = true if ::Debugger.respond_to?(:settings)
 end
