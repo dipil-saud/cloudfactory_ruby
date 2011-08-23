@@ -103,7 +103,7 @@ describe CF::Line do
           CF::Line.new("Digitizeard---#{i}", "Digitization", {:public => false, :description => "#{i}-this is description"})
         end
         lines = CF::Line.all
-        lines.last.title.should eq("digitizeard---4")
+        lines.last['title'].should eq("digitizeard---4")
       end
     end
 
@@ -420,6 +420,14 @@ describe CF::Line do
         form_field_id = line_details['stations'].first['form_fields'].first['id']
         worker_id = line_details['stations'].first['worker']['id']
         line_details.should eql({"title"=>"line_details_skill_test", "description"=>"", "department"=>"Digitization", "code"=>200, "input_formats"=>[{"id"=>"#{line_input_format_id}", "name"=>"image_url", "required"=>true, "valid_type"=>"url"}], "stations"=>[{"index"=>1, "type"=>"WorkStation", "worker"=>{"id"=>"#{worker_id}", "number"=>1, "reward"=>20, "type"=>"HumanWorker", "stat_badge"=>{"abandonment_rate"=>30, "approval_rating"=>80, "country"=>nil, "adult"=>nil}, "skill_badge"=>nil}, "form"=>{"title"=>"Enter text from a business card image", "instruction"=>"Describe"}, "form_fields"=>[{"id"=>"#{form_field_id}", "label"=>"First Name", "field_type"=>"short_answer", "hint"=>nil, "required"=>true, "unique"=>nil, "hide_label"=>nil, "value"=>nil}], "input_formats"=>[{"id"=>"#{station_input_format_id}", "name"=>"image_url", "required"=>true, "valid_type"=>"url"}]}]})
+      end
+    end
+    
+    it "should get all lines with pagination" do
+      VCR.use_cassette "lines/plain-ruby/line_pagination", :record => :new_episodes do
+      # WebMock.allow_net_connect!
+        line = CF::Line.all(:page => 1)
+        line.class.should eql(Array)
       end
     end
   end

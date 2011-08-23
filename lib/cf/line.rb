@@ -222,8 +222,20 @@ module CF
     # ==Returns all the lines of an account
     # ===Syntax for all method is
     #   CF::Line.all
-    def self.all
-      get("/lines/#{CF.account_name}.json")
+    def self.all(options={})
+      page = options[:page].nil? ? nil : options[:page]
+      if page
+        resp = get("/lines/#{CF.account_name}.json", :page => page)
+      else
+        resp = get("/lines/#{CF.account_name}.json")
+      end
+      new_resp = []
+      if resp.count > 0
+        resp.each do |l|
+          new_resp << l.to_hash
+        end
+      end
+      return new_resp
     end
     
     # ==Returns all the stations of a line

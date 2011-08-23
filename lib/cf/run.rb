@@ -178,12 +178,32 @@ module CF
       return resp['progress_details']
     end
     
-    def self.all(line_title=nil)
-      if line_title.blank?
-        get("/runs/#{CF.account_name}.json")
+    def self.all(options={})
+      page = options[:page].nil? ? nil : options[:page]
+      line_title = options[:line_title].nil? ? nil : options[:line_title]
+      
+      if line_title.nil?
+        if page.nil?
+          resp = get("/runs/#{CF.account_name}.json")
+        else
+          resp = get("/runs/#{CF.account_name}.json", :page => page)
+        end
       else
-        get("/lines/#{CF.account_name}/#{line_title}/list_runs.json")
+        if page.nil?
+          resp = get("/lines/#{CF.account_name}/#{line_title}/list_runs.json")
+        else
+          resp = get("/lines/#{CF.account_name}/#{line_title}/list_runs.json")
+        end
       end
+      
+      new_resp = []
+      
+      if resp.count > 0
+        resp.each do |r|
+          new_resp << r.to_hash
+        end
+      end
+      return new_resp
     end
     
     def self.resume(run_title)

@@ -378,10 +378,10 @@ module CF
           run_2 = CF::Run.create(line_2, "progress_run_32", [{"url"=> "http://www.sprout-technology.com"}])
           
           got_run = CF::Run.all
-          got_run.first.line.title.should eql("keyword_matching_robot_result")
-          got_run.first.title.should eql("keyword_matching_robot_run_result")
-          got_run.last.line.title.should eql("digarde-007")
-          got_run.last.title.should eql("runnamee1")
+          got_run.first['line']['title'].should eql("keyword_matching_robot_result")
+          got_run.first['title'].should eql("keyword_matching_robot_run_result")
+          got_run.last['line']['title'].should eql("digarde-007")
+          got_run.last['title'].should eql("runnamee1")
         end
       end
       
@@ -397,10 +397,18 @@ module CF
           run = CF::Run.create(line, "progress_run_11", [{"url"=> "http://www.sprout-technology.com"}])
           run_1 = CF::Run.create(line, "progress_run_12", [{"url"=> "http://www.sprout-technology.com"}])
           run_2 = CF::Run.create(line, "progress_run_13", [{"url"=> "http://www.sprout-technology.com"}])
-          got_run = CF::Run.all("progress_run_line_11")
-          got_run[0].title.should eql("progress_run_11")
-          got_run[1].title.should eql("progress_run_12")
-          got_run[2].title.should eql("progress_run_13")
+          got_run = CF::Run.all({:line_title => "progress_run_line_11"})
+          got_run[0]['title'].should eql("progress_run_11")
+          got_run[1]['title'].should eql("progress_run_12")
+          got_run[2]['title'].should eql("progress_run_13")
+        end
+      end
+      
+      it "should get all runs with pagination" do
+        VCR.use_cassette "run/plain-ruby/get-run-with-page", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+          run = CF::Run.all({:page => 1})
+          run.class.should eql(Array)
         end
       end
     end
