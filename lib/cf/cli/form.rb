@@ -41,9 +41,9 @@ module Cf
     include Cf::Config 
 
     desc "form generate", "generates a custom task form at <line-title>/<form-title>.html and its associated css and js files"
-    method_option :station, :type => :numeric, :required => true, :aliases => "-st", :desc => "the station index this form should be associated with"
-    method_option :labels, :type => :string, :required => true, :aliases => "-lb", :desc => "the labels that will be shown to the worker on MTurk window"
-    method_option :fields, :type => :hash, :required => true, :aliases => "-fd", :desc => "the actual form fields that the worker will fill in"
+    method_option :station, :type => :numeric, :required => true, :desc => "the station index this form should be associated with"
+    method_option :labels, :type => :string, :required => true, :desc => "the labels that will be shown to the worker on MTurk window"
+    method_option :fields, :type => :hash, :required => true, :desc => "the actual form fields that the worker will fill in"
     method_option :force, :type => :boolean, :default => false, :aliases => "-f", :desc => "force to overwrite the files if the form already exists, default is false"
 
     def generate
