@@ -378,8 +378,8 @@ module CF
           run_2 = CF::Run.create(line_2, "progress_run_32", [{"url"=> "http://www.sprout-technology.com"}])
           
           got_run = CF::Run.all
-          got_run.class.should eql(Array)
-          got_run.last['total_pages'].should eql(2)
+          got_run['runs'].class.should eql(Array)
+          got_run['total_pages'].should eql(2)
         end
       end
       
@@ -396,9 +396,9 @@ module CF
           run_1 = CF::Run.create(line, "progress_run_12", [{"url"=> "http://www.sprout-technology.com"}])
           run_2 = CF::Run.create(line, "progress_run_13", [{"url"=> "http://www.sprout-technology.com"}])
           got_run = CF::Run.all({:line_title => "progress_run_line_11"})
-          got_run[0]['title'].should eql("progress_run_11")
-          got_run[1]['title'].should eql("progress_run_12")
-          got_run[2]['title'].should eql("progress_run_13")
+          got_run['runs'][0]['title'].should eql("progress_run_11")
+          got_run['runs'][1]['title'].should eql("progress_run_12")
+          got_run['runs'][2]['title'].should eql("progress_run_13")
         end
       end
       
@@ -406,7 +406,7 @@ module CF
         VCR.use_cassette "run/plain-ruby/get-run-with-page", :record => :new_episodes do
         # WebMock.allow_net_connect!
           run = CF::Run.all({:page => 1})
-          run.class.should eql(Array)
+          run['runs'].class.should eql(Array)
         end
       end
       
@@ -423,8 +423,8 @@ module CF
             CF::Run.create(line, "pagination_run#{i}", [{"url"=> "http://www.sprout-technology.com"}])
           end
           run = CF::Run.all({:page => "all"})
-          run.last['total_pages'].should eql(1)
-          run.class.should eql(Array)
+          run['total_pages'].should eql(1)
+          run['runs'].class.should eql(Array)
         end
       end
     end

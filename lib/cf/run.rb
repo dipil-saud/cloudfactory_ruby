@@ -203,8 +203,8 @@ module CF
             new_resp << r.to_hash
           end
         end
-        new_resp << {"total_pages" => resp.total_pages}
-        return new_resp
+        send_resp = {"runs" => new_resp, "total_pages" => resp.total_pages}
+        return send_resp
       end
     end
     

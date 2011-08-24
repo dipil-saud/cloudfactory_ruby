@@ -103,7 +103,7 @@ describe CF::Line do
           CF::Line.new("Digitizeard---#{i}", "Digitization", {:public => false, :description => "#{i}-this is description"})
         end
         lines = CF::Line.all
-        lines.class.should eql(Array)
+        lines.class.should eql(Hash)
       end
     end
 
@@ -427,7 +427,7 @@ describe CF::Line do
       VCR.use_cassette "lines/plain-ruby/line_pagination", :record => :new_episodes do
       # WebMock.allow_net_connect!
         line = CF::Line.all(:page => 1)
-        line.class.should eql(Array)
+        line.class.should eql(Hash)
       end
     end
     
@@ -438,8 +438,8 @@ describe CF::Line do
           CF::Line.new("lines-listing--#{i}", "Digitization", {:public => true, :description => "#{i}-this is description"})
         end
         line = CF::Line.all(:page => "all")
-        line.last['total_pages'].should eql(1)
-        line.class.should eql(Array)
+        line['total_pages'].should eql(1)
+        line['lines'].class.should eql(Array)
       end
     end
   end

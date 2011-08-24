@@ -257,8 +257,8 @@ module CF
           new_resp << l.to_hash
         end
       end
-      new_resp << {"total_pages" => resp.total_pages}
-      return new_resp
+      send_resp = {"lines" => new_resp, "total_pages" => resp.total_pages}
+      return send_resp
     end
     
     # ==Returns all the stations of a line
