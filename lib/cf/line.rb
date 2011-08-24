@@ -26,7 +26,7 @@ module CF
     attr_accessor :input_formats
     
     # Contains Error Messages
-    attr_accessor :errors
+    attr_accessor :errors, :output_formats
 
     # ==Initializes a new line
     # ==Usage of line.new("line_name")
@@ -186,6 +186,28 @@ module CF
       @input_formats << input_formats_value
     end
 
+    def output_formats output_format = nil
+      if output_format
+        settings = output_format.settings
+        request = 
+        {
+          :body => 
+          {
+            :api_key => CF.api_key,
+            :output_formats => settings
+          }
+        }
+        resp = HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{CF.account_name}/#{self.title.downcase}/output_format.json",request)
+        output_format.errors = resp.parsed_response['error']['message'] if resp.code != 200
+        self.output_formats = output_format
+      else
+        @output_formats
+      end
+    end
+    
+    def output_formats=(output_format)
+      @output_formats = output_format
+    end
     # ==Returns the content of a line by making an Api call
     # ===Usage Example:
     #   CF::Line.info(line)

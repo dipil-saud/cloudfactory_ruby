@@ -455,4 +455,94 @@ describe CF::Line do
       end
     end
   end
+  
+  context "create line with output format" do
+    it "should create in block Dsl way with two stations" do
+      # WebMock.allow_net_connect!
+      VCR.use_cassette "lines/block/create-output-format", :record => :new_episodes do
+        line = CF::Line.create("line_with_output_format","Digitization") do |l|
+          CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+          CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 10})
+            CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+              CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+              CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
+              CF::FormField.new({:form => i, :label => "Last Name", :field_type => "short_answer", :required => "true"})
+            end
+          end
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+            CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+              CF::FormField.new({:form => i, :label => "Address", :field_type => "short_answer", :required => "true"})
+              CF::FormField.new({:form => i, :label => "Mobile", :field_type => "short_answer"})
+              CF::FormField.new({:form => i, :label => "Email", :field_type => "email", :required => "true"})
+            end
+          end
+          CF::OutputFormat.new({:line => l, :station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+        end
+        line.title.should eq("line_with_output_format")
+        line.input_formats.first.name.should eql("Company")
+        line.stations.first.type.should eq("WorkStation")
+        line.stations.first.worker.number.should eq(1)
+        line.stations.first.worker.reward.should eq(10)
+        line.output_formats.settings.should eql({:station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+      end
+    end
+    
+    it "should create in plain ruby way with two stations" do
+      # WebMock.allow_net_connect!
+      VCR.use_cassette "lines/plain-ruby/create-output-format", :record => :new_episodes do
+        line = CF::Line.create("line_with_output_format_1","Digitization") do |l|
+          CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+          CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 10})
+            CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+              CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+              CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
+              CF::FormField.new({:form => i, :label => "Last Name", :field_type => "short_answer", :required => "true"})
+            end
+          end
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+            CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+              CF::FormField.new({:form => i, :label => "Address", :field_type => "short_answer", :required => "true"})
+              CF::FormField.new({:form => i, :label => "Mobile", :field_type => "short_answer"})
+              CF::FormField.new({:form => i, :label => "Email", :field_type => "email", :required => "true"})
+            end
+          end
+        end
+        output_format = CF::OutputFormat.new({:station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+        line.output_formats output_format
+        line.title.should eq("line_with_output_format_1")
+        line.input_formats.first.name.should eql("Company")
+        line.stations.first.type.should eq("WorkStation")
+        line.stations.first.worker.number.should eq(1)
+        line.stations.first.worker.reward.should eq(10)
+        line.output_formats.settings.should eql({:station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+      end
+    end
+  
+    it "should through error if line is incomplete" do
+      # WebMock.allow_net_connect!
+      VCR.use_cassette "lines/block/create-output-format-error", :record => :new_episodes do
+        line = CF::Line.create("line_with_output_format","Digitization") do |l|
+          CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+          CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 10})
+            # CF::TaskForm.new({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) 
+          end
+          CF::OutputFormat.new({:line => l, :station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+        end
+        line.title.should eq("line_with_output_format")
+        line.input_formats.first.name.should eql("Company")
+        line.stations.first.type.should eq("WorkStation")
+        line.stations.first.worker.number.should eq(1)
+        line.stations.first.worker.reward.should eq(10)
+        line.output_formats.errors.should eql("Line is not complete or valid")
+      end
+    end
+  end
 end
