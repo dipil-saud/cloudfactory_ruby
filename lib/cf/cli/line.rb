@@ -268,10 +268,12 @@ module Cf # :nodoc: all
 
           end
         
-          output_formats = line_dump['output_formats']
-          output_format = CF::OutputFormat.new(output_formats.merge(:line => line))
-          say "Adding Output Format #{output_formats}", :green
-          display_error(line_title, "#{output_format.errors}") if output_format.errors.present?
+          output_formats = line_dump['output_formats'].presence
+          if output_formats
+            output_format = CF::OutputFormat.new(output_formats.merge(:line => line))
+            say "Adding Output Format #{output_formats}", :green
+            display_error(line_title, "#{output_format.errors}") if output_format.errors.present?
+          end
         end
         say " ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁", :white
         say "Line was successfully created.", :green
