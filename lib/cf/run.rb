@@ -196,11 +196,13 @@ module CF
         end
       end
       self.errors == resp.errors.message if resp.code != 200
+      new_resp = []
       if resp.code == 200
-        new_resp = []
-        if resp.runs.count > 0
-          resp.runs.each do |r|
-            new_resp << r.to_hash
+        if resp.runs
+          if resp.runs.count > 0
+            resp.runs.each do |r|
+              new_resp << r.to_hash
+            end
           end
         end
         send_resp = {"runs" => new_resp, "total_pages" => resp.total_pages}

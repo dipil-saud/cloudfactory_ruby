@@ -251,10 +251,13 @@ module CF
       else
         resp = get("/lines/#{CF.account_name}.json")
       end
+      self.errors == resp.errors.message if resp.code != 200
       new_resp = []
-      if resp.lines.count > 0
-        resp.lines.each do |l|
-          new_resp << l.to_hash
+      if resp.lines
+        if resp.lines.count > 0
+          resp.lines.each do |l|
+            new_resp << l.to_hash
+          end
         end
       end
       send_resp = {"lines" => new_resp, "total_pages" => resp.total_pages}
