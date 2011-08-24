@@ -1,3 +1,7 @@
+## 0.1.20 (2011-08-24)
+
+* Fixed Line listing and deletion issue
+
 ## 0.1.19 (2011-08-23)
 
 * Feature: Introduced new cli command: cf line inspect [-l=line_title]
