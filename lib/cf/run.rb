@@ -192,18 +192,20 @@ module CF
         if page.nil?
           resp = get("/lines/#{CF.account_name}/#{line_title}/list_runs.json")
         else
-          resp = get("/lines/#{CF.account_name}/#{line_title}/list_runs.json")
+          resp = get("/lines/#{CF.account_name}/#{line_title}/list_runs.json", :page => page)
         end
       end
-      
-      new_resp = []
-      
-      if resp.count > 0
-        resp.each do |r|
-          new_resp << r.to_hash
+      self.errors == resp.errors.message if resp.code != 200
+      if resp.code == 200
+        new_resp = []
+        if resp.runs.count > 0
+          resp.runs.each do |r|
+            new_resp << r.to_hash
+          end
         end
+        new_resp << {"total_pages" => resp.total_pages}
+        return new_resp
       end
-      return new_resp
     end
     
     def self.resume(run_title)

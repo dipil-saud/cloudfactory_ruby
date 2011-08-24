@@ -378,10 +378,8 @@ module CF
           run_2 = CF::Run.create(line_2, "progress_run_32", [{"url"=> "http://www.sprout-technology.com"}])
           
           got_run = CF::Run.all
-          got_run.first['line']['title'].should eql("keyword_matching_robot_result")
-          got_run.first['title'].should eql("keyword_matching_robot_run_result")
-          got_run.last['line']['title'].should eql("digarde-007")
-          got_run.last['title'].should eql("runnamee1")
+          got_run.class.should eql(Array)
+          got_run.last['total_pages'].should eql(2)
         end
       end
       
@@ -408,6 +406,24 @@ module CF
         VCR.use_cassette "run/plain-ruby/get-run-with-page", :record => :new_episodes do
         # WebMock.allow_net_connect!
           run = CF::Run.all({:page => 1})
+          run.class.should eql(Array)
+        end
+      end
+      
+      it "should get all runs with pagination all" do
+        VCR.use_cassette "run/plain-ruby/get-run-with-page-all", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+          line = CF::Line.create("pagination_line","Digitization") do |l|
+            CF::InputFormat.new({:line => l, :name => "url", :valid_type => "url", :required => "true"})
+            CF::Station.create({:line => l, :type => "work"}) do |s|
+              CF::RobotWorker.create({:station => s, :settings => {:url => ["{{url}}"], :max_retrieve => 5, :show_source_text => true}, :type => "term_extraction_robot"})
+            end
+          end
+          25.times do |i|
+            CF::Run.create(line, "pagination_run#{i}", [{"url"=> "http://www.sprout-technology.com"}])
+          end
+          run = CF::Run.all({:page => "all"})
+          run.last['total_pages'].should eql(1)
           run.class.should eql(Array)
         end
       end

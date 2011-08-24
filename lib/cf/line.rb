@@ -245,18 +245,19 @@ module CF
     # ===Syntax for all method is
     #   CF::Line.all
     def self.all(options={})
-      page = options[:page].nil? ? nil : options[:page]
+      page = options[:page].presence
       if page
         resp = get("/lines/#{CF.account_name}.json", :page => page)
       else
         resp = get("/lines/#{CF.account_name}.json")
       end
       new_resp = []
-      if resp.count > 0
-        resp.each do |l|
+      if resp.lines.count > 0
+        resp.lines.each do |l|
           new_resp << l.to_hash
         end
       end
+      new_resp << {"total_pages" => resp.total_pages}
       return new_resp
     end
     
