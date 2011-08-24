@@ -282,6 +282,8 @@ module Cf # :nodoc: all
     end
 
     desc "line list", "List your lines"
+    method_option :page, :type => :numeric, :aliases => '-p', :desc => "page number"
+    method_option :all, :type => :boolean, :default => false, :aliases => '-a', :desc => "list all the lines without pagination"
     def list
       line_source = Dir.pwd
       yaml_source = "#{line_source}/line.yml"
@@ -289,11 +291,24 @@ module Cf # :nodoc: all
       set_target_uri(false)
       set_api_key(yaml_source)
       CF.account_name = CF::Account.info.name
-      lines = CF::Line.all
+      
+      if options.all
+        resp_lines = CF::Line.all(:page => 'all')
+      else
+        if page = options['page'].presence
+          resp_lines = CF::Line.all(:page => page)
+        else
+          resp_lines = CF::Line.all
+        end
+      end
+      lines = resp_lines['lines'].presence
       say "\n"
       say("You don't have any lines to list", :yellow) and return if lines.blank?
       
-      lines.sort! {|a, b| a[:name] <=> b[:name] }
+      if resp_lines['total_pages']
+        say("Showing page #{options['page']} of #{resp_lines['total_pages']}")
+      end
+      lines.sort! { |a, b| a['title'] <=> b['title'] }
       lines_table = table do |t|
         t.headings = ["Line Title", 'URL']
         lines.each do |line|
