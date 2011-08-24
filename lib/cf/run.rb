@@ -179,8 +179,8 @@ module CF
     end
     
     def self.all(options={})
-      page = options[:page].nil? ? nil : options[:page]
-      line_title = options[:line_title].nil? ? nil : options[:line_title]
+      page = options[:page].presence
+      line_title = options[:line_title].presence
       
       if line_title.nil?
         if page.nil?

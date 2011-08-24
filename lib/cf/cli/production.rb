@@ -135,13 +135,14 @@ module Cf # :nodoc: all
     
     desc "production list", "list the production runs"
     method_option :line, :type => :string, :aliases => "-l", :desc => "the title of the line"
+    method_option :page, :type => :numeric, :aliases => "-p", :desc => "page number"
     def list
       set_target_uri(false)
       set_api_key
       CF.account_name = CF::Account.info.name
       if options['line'].present?
         line_title = options['line'].parameterize
-        runs = CF::Run.all(line_title)
+        runs = CF::Run.all(:line_title => line_title)
       else
         runs = CF::Run.all
       end
@@ -156,6 +157,7 @@ module Cf # :nodoc: all
       runs_table = table do |t|
         t.headings = ["Run Title", 'URL']
         runs.each do |run|
+          run = Hashie::Mash.new(run)
           t << [run.title, "http://#{CF.account_name}.cloudfactory.com/runs/#{CF.account_name}/#{run.title}"]
         end
       end

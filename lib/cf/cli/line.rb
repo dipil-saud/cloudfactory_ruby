@@ -78,12 +78,14 @@ module Cf # :nodoc: all
         else
           
           # Check whether this line has existing runs or not
-          runs = CF::Run.all(line_title)
+          runs = CF::Run.all(:line_title => line_title)
           if runs.class == Array and runs.present?
             say("!!! Warning !!!\nThe following are the existing production runs based on this line.", :cyan)
+            
             existing_runs = Cf::Production.new
             existing_runs.options = {"line" => line_title}
             existing_runs.list
+            
             delete_forcefully = agree("Do you still want to delete this line? [y/n] ")
             if delete_forcefully
               CF::Line.destroy(line_title, :forced => true)
@@ -281,13 +283,14 @@ module Cf # :nodoc: all
       set_api_key(yaml_source)
       CF.account_name = CF::Account.info.name
       lines = CF::Line.all
-      lines.sort! {|a, b| a[:name] <=> b[:name] }
       say "\n"
       say("You don't have any lines to list", :yellow) and return if lines.blank?
-
+      
+      lines.sort! {|a, b| a[:name] <=> b[:name] }
       lines_table = table do |t|
         t.headings = ["Line Title", 'URL']
         lines.each do |line|
+          line = Hashie::Mash.new(line)
           t << [line.title, "http://#{CF.account_name}.cloudfactory.com/lines/#{CF.account_name}/#{line.title.parameterize}"]
         end
       end
