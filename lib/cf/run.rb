@@ -86,11 +86,28 @@ module CF
       Run.new(line, title, file)
     end
 
+    def self.add_units(options={})
+      units = options[:units].presence
+      run_title = options[:run_title].presence
+
+      request = 
+      {
+        :body => 
+        {
+          :api_key => CF.api_key,
+          :data => units
+        }
+      }
+      resp = HTTParty.post("#{CF.api_url}#{CF.api_version}/runs/#{CF.account_name}/#{run_title.downcase}/units.json",request)
+      @errors = resp['error']['message'] if resp.code != 200
+      return resp.parsed_response
+    end
     # ==Returns Final Output of production Run
     # ===Usage Example:
     #   run_object.final_output
     def final_output
       resp = self.class.get("/runs/#{CF.account_name}/#{self.title.downcase}/output.json")
+      self.errors = resp.error.message if resp.code != 200
       output = []
       if resp['output'].class == Array
         resp['output'].each do |o|
@@ -105,6 +122,7 @@ module CF
     #   CF::Run.final_output("run_title")
     def self.final_output(title)
       resp = get("/runs/#{CF.account_name}/#{title.downcase}/output.json")
+      @errors = resp.error.message if resp.code != 200
       output = []
       if resp['output'].class == Array
         resp['output'].each do |o|
@@ -122,6 +140,7 @@ module CF
       station_no = options[:station]
       title = options[:title]
       resp = get("/runs/#{CF.account_name}/#{title.downcase}/output/#{station_no}.json")
+      @errors = resp.error.message if resp.code != 200
       output = []
       if resp['output'].class == Array
         resp['output'].each do |o|
@@ -138,6 +157,7 @@ module CF
     def output(options={})
       station_no = options[:station]
       resp = self.class.get("/runs/#{CF.account_name}/#{self.title.downcase}/output/#{station_no}.json")
+      self.errors = resp.error.message if resp.code != 200
       output = []
       if resp['output'].class == Array
         resp['output'].each do |o|
@@ -153,6 +173,7 @@ module CF
     def self.find(title)
       resp = get("/runs/#{CF.account_name}/#{title.downcase}.json")
       if resp.code != 200
+        @errors = resp.error.message
         resp.error = resp.error.message
         resp.merge!(:errors => "#{resp.error}")
         resp.delete(:error)
@@ -195,7 +216,7 @@ module CF
           resp = get("/lines/#{CF.account_name}/#{line_title}/list_runs.json", :page => page)
         end
       end
-      self.errors == resp.errors.message if resp.code != 200
+      @errors = resp.error.message if resp.code != 200
       new_resp = []
       if resp.code == 200
         if resp.runs
@@ -211,7 +232,9 @@ module CF
     end
     
     def self.resume(run_title)
-      post("/runs/#{CF.account_name}/#{run_title}/resume.json")
+      resp = post("/runs/#{CF.account_name}/#{run_title}/resume.json")
+      @errors = resp.error.message if resp.code != 200
+      return resp
     end
   end
 end

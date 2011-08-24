@@ -265,6 +265,7 @@ module CF
     # returns the station object
     def get
       resp = self.class.get("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}.json")
+      self.errors = resp.error.message if resp.code != 200
       return resp
     end
 
@@ -272,7 +273,9 @@ module CF
     # ===Usage example:
     #   @got_form = line.stations[0].get_form
     def get_form
-      self.class.get("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}/form.json")
+      resp = self.class.get("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}/form.json")
+      self.errors = resp.error.message if resp.code != 200
+      return resp
     end
 
     # ==Returns all the stations associated with a particular line
@@ -292,7 +295,9 @@ module CF
     #
     #   line.stations.first.delete
     def delete
-      self.class.delete("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}.json")
+      resp = self.class.delete("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}.json")
+      self.errors = resp.error.message if resp.code != 200
+      return resp
     end
     
     def to_s

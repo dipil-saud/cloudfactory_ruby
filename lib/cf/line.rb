@@ -219,6 +219,8 @@ module CF
       else
         resp = get("/lines/#{CF.account_name}/#{line.downcase}.json")
       end
+      @errors = resp.error.message if resp.code != 200
+      return resp
     end
 
     # ==Finds a line
@@ -238,6 +240,7 @@ module CF
           resp = get("/lines/#{CF.account_name}/#{line.downcase}.json")
         end
       end
+      @errors = resp.error.message if resp.code != 200
       return resp.to_hash
     end
     
@@ -251,7 +254,7 @@ module CF
       else
         resp = get("/lines/#{CF.account_name}.json")
       end
-      self.errors == resp.errors.message if resp.code != 200
+      @errors = resp.error.message if resp.code != 200
       new_resp = []
       if resp.lines
         if resp.lines.count > 0
@@ -319,11 +322,14 @@ module CF
       else
         resp = delete("/lines/#{CF.account_name}/#{title.downcase}.json")
       end
+      @errors = resp.error.message if resp.code != 200
+      return resp
     end
     
     def self.inspect(line_title)
       resp = get("/lines/#{CF.account_name}/#{line_title.downcase}/inspect.json")
-      if !resp.code == 200
+      @errors = resp.error.message if resp.code != 200
+      if resp.code == 200
         send_resp = resp.to_hash
         @line_input_formats = []
         resp.input_formats.each do |l_i|

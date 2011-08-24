@@ -176,7 +176,7 @@ describe CF::Line do
         resp = CF::Line.destroy("Digitizerd-2")
         resp.code.should eql(200)
         deleted_resp = CF::Line.info(line)
-        deleted_resp.error.message.should eql("Line document not found using selector: {:public=>true, :title=>\"digitizerd-2\"}")
+        deleted_resp.error.message.should eql("Line not found for title: digitizerd-2 under your account")
       end
     end
   end

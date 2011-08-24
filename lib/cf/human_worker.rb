@@ -153,6 +153,7 @@ module CF
         }
       }
       resp = HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{CF.account_name}/#{@station.line['title'].downcase}/stations/#{@station.index}/workers/#{self.id}/badge.json",request)
+      self.errors = resp['error']['message'] if resp.code != 200
       self.skill_badges << resp.parsed_response['skill_badges']
     end
     
