@@ -34,17 +34,20 @@ Gem::Specification.new do |s|
   
   3. Generate your first assembly line...
   > cf line generate <line-title>
-
-  4. Edit the generated line.yml to design your perfect assembly line
+  
+  4. Go into generated line directory
+  > cd <line-title>
+  
+  5. Edit the generated line.yml to design your perfect assembly line
   See http://developers.cloudfactory.com/lines/yaml.html
-
-  5. Create your line in CloudFactory
+  
+  6. Create your line in CloudFactory
   > cf line create
 
-  6. Do a test production run in the sandbox first...
+  7. Do a test production run in the sandbox first...
   > cf production start TITLE -i=INPUT_DATA.CSV
 
-  7. Go live! Send your production run to real workers...
+  8. Go live! Send your production run to real workers...
   > cf production start TITLE -i=INPUT_DATA.CSV --live
   
  ------------------------------------------------------------------------------
