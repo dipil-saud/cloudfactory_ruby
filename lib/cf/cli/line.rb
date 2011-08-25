@@ -70,9 +70,9 @@ module Cf # :nodoc: all
         CF.account_name = CF::Account.info.name
         line_title = options['line'].parameterize
       end
-      
-      line = CF::Line.find(line_title)
-      line = Hashie::Mash.new(line)
+
+      resp_line = CF::Line.find(line_title)
+      line = Hashie::Mash.new(resp_line)
       if line.title == line_title
         if options.force
           CF::Line.destroy(line_title, :forced => true)
@@ -80,12 +80,11 @@ module Cf # :nodoc: all
         else
           
           # Check whether this line has existing runs or not
-          runs = CF::Run.all(:line_title => line_title)
-          if runs.class == Array and runs.present?
+          resp_runs = CF::Run.all({:line_title => line_title})
+
+          if resp_runs.has_key?("runs") && resp_runs['runs'].present?
             say("!!! Warning !!!\nThe following are the existing production runs based on this line.", :cyan)
-            
-            existing_runs = Cf::Production.new
-            existing_runs.options = {"line" => line_title}
+            existing_runs = Cf::Production.new([],{'line' => line_title, 'all' => true})
             existing_runs.list
             
             delete_forcefully = agree("Do you still want to delete this line? [y/n] ")

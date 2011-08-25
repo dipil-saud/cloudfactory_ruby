@@ -134,7 +134,7 @@ module Cf # :nodoc: all
     end
     
     desc "production list", "list the production runs"
-    method_option :line, :type => :string, :aliases => "-l", :desc => "the title of the line"
+    method_option :line, :type => :string, :aliases => "-l", :desc => "the title of the line, if the line title is not given, it will show all the production runs under your account"
     method_option :page, :type => :numeric, :aliases => "-p", :desc => "page number"
     method_option :all, :type => :boolean, :default => false, :aliases => '-a', :desc => "list all the production runs"
     def list
@@ -143,13 +143,13 @@ module Cf # :nodoc: all
       CF.account_name = CF::Account.info.name
       param = {}
       current_page = 1
-      
+
       if options['line'].present?
         line_title = options['line'].parameterize
         param.merge!({:line_title => line_title})
 
-        if options.all
-          param = {:page => "all"}
+        if options['all']
+          param.merge!({:page => "all"})
           current_page = 1
         end
         
@@ -159,16 +159,15 @@ module Cf # :nodoc: all
         end
 
       else
-        if options.all
+        if options['all']
           param = {:page => "all"}
           current_page = 1
-        end        
+        end
 
         if page = options['page'].presence
           param.merge!({:page => page})
           current_page = page
         end
-
       end
 
       resp_runs = CF::Run.all(param)
@@ -182,11 +181,8 @@ module Cf # :nodoc: all
       end
       
       if resp_runs['total_pages']
-        # say("\n#{resp_runs['total_pages']}")
         say("\nShowing page #{current_page} of #{resp_runs['total_pages']} (Total runs: #{resp_runs['total_runs']})")
       end
-      # lines.sort! { |a, b| a['title'] <=> b['title'] }
-
       runs = resp_runs['runs'].presence
       runs.sort! {|a, b| a['title'] <=> b['title'] }
       runs_table = table do |t|
