@@ -17,10 +17,11 @@ require 'active_support/core_ext/object/blank'
 
 cli_directory = File.expand_path("../cf/cli", File.dirname(__FILE__))
 require "#{cli_directory}/config"
+require "#{cli_directory}/line_yaml_validator"
 require "#{cli_directory}/line"
 require "#{cli_directory}/form"
 require "#{cli_directory}/production"
-require "#{cli_directory}/line_yaml_validator"
+
 
 if ENV['TEST']
   require 'ruby-debug'

@@ -27,6 +27,8 @@ end
 module Cf # :nodoc: all
   class Line < Thor # :nodoc: all
     include Cf::Config
+    include Cf::LineYamlValidator
+    
     desc "line generate LINE-TITLE", "generates a line template at <line-title>/line.yml"
     method_option :force, :type => :boolean, :default => false, :aliases => "-f", :desc => "force to overwrite the files if the line already exists, default is false"
     # method_option :with_custom_form, :type => :boolean, :default => false, :aliases => "-wcf", :desc => "generate the template with custom task form and the sample files, default is true"
@@ -126,8 +128,7 @@ module Cf # :nodoc: all
         say "The line.yml file does not exist in this directory", :red
         return
       end
-      
-      errors = LineYamlValidator.validate(yaml_source)
+      errors = validate(yaml_source)
       
       if errors.present?
         say("Invalid line.yml file. Correct its structure as per the errors shown below.", :red)
