@@ -1,3 +1,12 @@
+## 0.1.22 (2011-08-26)
+
+* Fixed #317
+* Fixed #156
+* Fixed #328
+* Store the account name and email ad while cf login
+* For runs and lines listing, :page => 'all' added to return all the records #321
+* Inserting units to existing production run #310
+
 ## 0.1.21 (2011-08-25)
 
 * Line listing with pagination with custom flags
