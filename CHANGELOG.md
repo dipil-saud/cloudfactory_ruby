@@ -1,3 +1,9 @@
+## 0.1.21 (2011-08-25)
+
+* Line listing with pagination with custom flags
+* cf login now stores account_name and email as well
+* Fixed the line listing issue
+
 ## 0.1.20 (2011-08-24)
 
 * Fixed Line listing and deletion issue
