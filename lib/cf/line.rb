@@ -263,7 +263,7 @@ module CF
           end
         end
       end
-      send_resp = {"lines" => new_resp, "total_pages" => resp.total_pages}
+      send_resp = {"lines" => new_resp, "total_pages" => resp.total_pages, "total_lines" => resp.total_lines}
       return send_resp
     end
     

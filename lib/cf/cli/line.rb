@@ -294,19 +294,23 @@ module Cf # :nodoc: all
       
       if options.all
         resp_lines = CF::Line.all(:page => 'all')
+        current_page = 1
       else
         if page = options['page'].presence
           resp_lines = CF::Line.all(:page => page)
+          current_page = page
         else
           resp_lines = CF::Line.all
+          current_page = 1
         end
       end
+
       lines = resp_lines['lines'].presence
       say "\n"
       say("You don't have any lines to list", :yellow) and return if lines.blank?
       
       if resp_lines['total_pages']
-        say("Showing page #{options['page']} of #{resp_lines['total_pages']}")
+        say("Showing page #{current_page} of #{resp_lines['total_pages']} (Total lines: #{resp_lines['total_lines']})")
       end
       lines.sort! { |a, b| a['title'] <=> b['title'] }
       lines_table = table do |t|
