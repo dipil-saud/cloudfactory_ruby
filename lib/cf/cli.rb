@@ -42,8 +42,9 @@ module Cf # :nodoc: all
       
       set_target_uri(false)
       resp = CF::Account.login(email, passwd)
+      
       if resp.error.blank? and resp.api_key.present?
-        File.open(config_file, 'w') {|f| f.write("#Don't change this file unless you know what you're doing\n" + { :target_url => CF.api_url, :api_version => CF.api_version, :api_key => resp.api_key }.to_yaml) }
+        File.open(config_file, 'w') {|f| f.write("#Don't change this file unless you know what you're doing\n" + { :target_url => CF.api_url, :api_version => CF.api_version, :api_key => resp.api_key, :account_name => resp.account_name, :email => email.strip }.to_yaml) }
         say("\nNow you're logged in.\nTo get started, run cf help\n", :green)
       else
         say("\n#{resp.error.message}\nTry again with valid one.\n", :red)
@@ -53,7 +54,7 @@ module Cf # :nodoc: all
     no_tasks do
       def ask_password(message)
         ::HighLine.new.ask(message) do |q| 
-          q.echo = false
+          q.echo = '*'
         end
       end
     end
