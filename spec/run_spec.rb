@@ -481,6 +481,28 @@ module CF
         end
       end
       
+      it "should add units by passing file" do
+        VCR.use_cassette "run/block/adding_units_file", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+          line = CF::Line.create("adding_units_file","Digitization") do |l|
+            CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+            CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+            CF::Station.create({:line => l, :type => "work"}) do |s|
+              CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+              CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+                CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+                CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
+                CF::FormField.new({:form => i, :label => "Last Name", :field_type => "short_answer", :required => "true"})
+              end
+            end
+          end
+          run = CF::Run.create(line, "adding_units_file_run", [{"Company"=>"Sprout","Website"=>"sprout.com"}])
+          added_units = CF::Run.add_units({:run_title => "adding_units_file_run", :file => File.expand_path("../../fixtures/input_data/test.csv", __FILE__)})
+          added_units['successfull'].should eql("sucessfully added 1 units, failed :0")
+          run.title.should eql("adding_units_file_run")
+        end
+      end
+      
       it "should throw errors for invalid input while adding units" do
         VCR.use_cassette "run/block/adding_units_errors", :record => :new_episodes do
         # WebMock.allow_net_connect!

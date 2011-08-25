@@ -89,18 +89,27 @@ module CF
     def self.add_units(options={})
       units = options[:units].presence
       run_title = options[:run_title].presence
-
-      request = 
-      {
-        :body => 
+      file = options[:file].presence
+      if units
+        request = 
         {
-          :api_key => CF.api_key,
-          :data => units
+          :body => 
+          {
+            :api_key => CF.api_key,
+            :data => units
+          }
         }
-      }
-      resp = HTTParty.post("#{CF.api_url}#{CF.api_version}/runs/#{CF.account_name}/#{run_title.downcase}/units.json",request)
-      @errors = resp['error']['message'] if resp.code != 200
-      return resp.parsed_response
+        resp = HTTParty.post("#{CF.api_url}#{CF.api_version}/runs/#{CF.account_name}/#{run_title.downcase}/units.json",request)
+        @errors = resp['error']['message'] if resp.code != 200
+        return resp.parsed_response
+      elsif file
+        if File.exist?(file.to_s)
+          file_upload = File.new(file, 'rb')
+          resp = post("/runs/#{CF.account_name}/#{run_title.downcase}/units.json", {:file => file_upload})
+          @errors = resp.error.message if resp.code != 200
+          return resp.to_hash
+        end
+      end
     end
     # ==Returns Final Output of production Run
     # ===Usage Example:
