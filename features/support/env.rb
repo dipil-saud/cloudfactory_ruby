@@ -19,6 +19,11 @@ Before('@too_slow_process') do
 end
 
 if ENV['TEST_CLI']
+
+  require 'ruby-debug'
+  ::Debugger.start
+  ::Debugger.settings[:autoeval] = true if ::Debugger.respond_to?(:settings)
+  
   API_CONFIG = YAML.load_file(File.expand_path("../../../fixtures/api_credentials.yml", __FILE__))
   CF.configure do |config|
     config.api_version = API_CONFIG['api_version']
