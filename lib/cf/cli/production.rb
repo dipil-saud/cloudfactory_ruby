@@ -219,6 +219,35 @@ module Cf # :nodoc: all
       # if result.status == "resumed"
       say("Run with title \"#{result.title}\" is resumed!", :green)
       # end
-    end    
+    end   
+    
+    desc "production add_units", "add units to already existing production run"
+    method_option :run_title, :type => :string, :required => true, :aliases => "-t", :desc => "the title of the run to resume"
+    method_option :input_data, :type => :string, :required => true, :aliases => "-i", :desc => "the path of the input data file"
+    
+    def add_units
+      set_target_uri(false)
+      set_api_key
+      CF.account_name = CF::Account.info.name
+      run_title = options[:run_title].parameterize
+      input_data = options[:input_data].presence
+      
+      if input_data =~ /^\// #checking absolute input data path
+        input_data_file = input_data
+      else
+        unless File.exist?(input_data)
+          say("The input data file named #{input_data} doesn't exist", :red) and return
+        end
+        input_data_file = "#{Dir.pwd}/#{input_data}"
+      end
+      units = CF::Run.add_units({:run_title => run_title, :file => input_data_file})
+      if units['error'].present?
+        say("Error: #{units['error']['message']}", :red) and exit(1)
+      end
+
+      # if result.status == "resumed"
+      say("\"#{units['successfull']}\"!", :green)
+      # end
+    end 
   end
 end
