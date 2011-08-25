@@ -379,7 +379,8 @@ module CF
           
           got_run = CF::Run.all
           got_run['runs'].class.should eql(Array)
-          got_run['total_pages'].should eql(2)
+          got_run['runs'].first['progress'].should eql(100)
+          got_run['runs'].first['status'].should eql("active")
         end
       end
       
@@ -407,6 +408,8 @@ module CF
         # WebMock.allow_net_connect!
           run = CF::Run.all({:page => 1})
           run['runs'].class.should eql(Array)
+          run['runs'].first['progress'].should eql(100)
+          run['runs'].first['status'].should eql("active")
         end
       end
       
