@@ -216,7 +216,12 @@ module CF
           resp = get("/lines/#{CF.account_name}/#{line_title}/list_runs.json", :page => page)
         end
       end
-      @errors = resp.error.message if resp.code != 200
+      
+      if resp.code != 200
+        send_resp = {"error" => resp.error.message}
+        return send_resp
+      end
+
       new_resp = []
       if resp.code == 200
         if resp.runs
@@ -226,7 +231,7 @@ module CF
             end
           end
         end
-        send_resp = {"runs" => new_resp, "total_pages" => resp.total_pages}
+        send_resp = {"runs" => new_resp, "total_pages" => resp.total_pages, "total_runs" => resp.total_runs}
         return send_resp
       end
     end
