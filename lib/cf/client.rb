@@ -9,7 +9,11 @@ module CF # :nodoc: all
       end
 
       def get(*args)
-        handle_response RestClient.get("#{CF.api_url}#{CF.api_version}#{args.first}", :params => default_params, :accept => 'json'){ |response, request, result| response }
+        if args.length > 1
+          handle_response RestClient.get("#{CF.api_url}#{CF.api_version}#{args.first}", :params => default_params.merge!(args.last), :accept => 'json'){ |response, request, result| response }
+        else
+          handle_response RestClient.get("#{CF.api_url}#{CF.api_version}#{args.first}", :params => default_params, :accept => 'json'){ |response, request, result| response }
+        end
       end
 
       def post(*args)
@@ -56,7 +60,7 @@ module CF # :nodoc: all
             Hashie::Mash.new(new_response)
           end
         else
-          response
+          JSON.load(response)
         end
       end
     end

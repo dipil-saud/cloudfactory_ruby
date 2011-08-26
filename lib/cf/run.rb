@@ -31,14 +31,23 @@ module CF
         @line = line
         @line_title = line.title
       elsif line.class == String
-        @line_title = line
+        if line.split("/").count == 2
+          @account = line.split("/").first
+          @line_title = line.split("/").last
+        elsif line.split("/").count == 1
+          @line_title = line
+        end
       end
       @title = title
       if File.exist?(input.to_s)
         @file = input
         @param_data = File.new(input, 'rb')
         @param_for_input = :file
-        resp = self.class.post("/lines/#{CF.account_name}/#{@line_title.downcase}/runs.json", {:data => {:run => {:title => @title}}, @param_for_input => @param_data})
+        if line.class == String && line.split("/").count == 2
+          resp = self.class.post("/lines/#{@account}/#{@line_title.downcase}/runs.json", {:data => {:run => {:title => @title}}, @param_for_input => @param_data})
+        else
+          resp = self.class.post("/lines/#{CF.account_name}/#{@line_title.downcase}/runs.json", {:data => {:run => {:title => @title}}, @param_for_input => @param_data})
+        end
         if resp.code != 200
           self.errors = resp.error.message
         end
@@ -54,7 +63,11 @@ module CF
             :data =>{:run => { :title => @title }, :inputs => @param_data}
           }
         }
-        run =  HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{CF.account_name}/#{@line_title.downcase}/runs.json",options)
+        if line.class == String && line.split("/").count == 2
+          run =  HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{@account}/#{@line_title.downcase}/runs.json",options)
+        else
+          run =  HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{CF.account_name}/#{@line_title.downcase}/runs.json",options)
+        end
         if run.code != 200
           self.errors = run.parsed_response['error']['message']
         end
@@ -73,23 +86,44 @@ module CF
       Run.new(line, title, file)
     end
 
+    def self.add_units(options={})
+      units = options[:units].presence
+      run_title = options[:run_title].presence
+      file = options[:file].presence
+      if units
+        request = 
+        {
+          :body => 
+          {
+            :api_key => CF.api_key,
+            :data => units
+          }
+        }
+        resp = HTTParty.post("#{CF.api_url}#{CF.api_version}/runs/#{CF.account_name}/#{run_title.downcase}/units.json",request)
+        @errors = resp['error']['message'] if resp.code != 200
+        return resp.parsed_response
+      elsif file
+        if File.exist?(file.to_s)
+          file_upload = File.new(file, 'rb')
+          resp = post("/runs/#{CF.account_name}/#{run_title.downcase}/units.json", {:file => file_upload})
+          @errors = resp.error.message if resp.code != 200
+          return resp.to_hash
+        end
+      end
+    end
     # ==Returns Final Output of production Run
     # ===Usage Example:
     #   run_object.final_output
     def final_output
       resp = self.class.get("/runs/#{CF.account_name}/#{self.title.downcase}/output.json")
-      @final_output =[]
-      resp['output'].each do |r|
-        result = FinalOutput.new()
-        r.to_hash.each_pair do |k,v|
-          result.send("#{k}=",v) if result.respond_to?(k)
+      self.errors = resp.error.message if resp.code != 200
+      output = []
+      if resp['output'].class == Array
+        resp['output'].each do |o|
+          output << o.to_hash
         end
-        if result.final_output == nil
-          result.final_output = resp.output
-        end
-        @final_output << result
       end
-      return @final_output
+      return output
     end
 
     # ==Returns Final Output of production Run
@@ -97,7 +131,14 @@ module CF
     #   CF::Run.final_output("run_title")
     def self.final_output(title)
       resp = get("/runs/#{CF.account_name}/#{title.downcase}/output.json")
-      return resp['output']
+      @errors = resp.error.message if resp.code != 200
+      output = []
+      if resp['output'].class == Array
+        resp['output'].each do |o|
+          output << o.to_hash
+        end
+      end
+      return output
     end
     
     # ==Returns Output of production Run for any specific Station and for given Run Title
@@ -108,7 +149,14 @@ module CF
       station_no = options[:station]
       title = options[:title]
       resp = get("/runs/#{CF.account_name}/#{title.downcase}/output/#{station_no}.json")
-      return resp['output']
+      @errors = resp.error.message if resp.code != 200
+      output = []
+      if resp['output'].class == Array
+        resp['output'].each do |o|
+          output << o.to_hash
+        end
+      end
+      return output
     end
     
     # ==Returns Output of Run object for any specific Station
@@ -118,7 +166,14 @@ module CF
     def output(options={})
       station_no = options[:station]
       resp = self.class.get("/runs/#{CF.account_name}/#{self.title.downcase}/output/#{station_no}.json")
-      return resp['output'].first.to_hash
+      self.errors = resp.error.message if resp.code != 200
+      output = []
+      if resp['output'].class == Array
+        resp['output'].each do |o|
+          output << o.to_hash
+        end
+      end
+      return output
     end
     
     # ==Searches Run for the given "run_title"
@@ -127,6 +182,7 @@ module CF
     def self.find(title)
       resp = get("/runs/#{CF.account_name}/#{title.downcase}.json")
       if resp.code != 200
+        @errors = resp.error.message
         resp.error = resp.error.message
         resp.merge!(:errors => "#{resp.error}")
         resp.delete(:error)
@@ -152,16 +208,47 @@ module CF
       return resp['progress_details']
     end
     
-    def self.all(line_title=nil)
-      if line_title.blank?
-        get("/runs/#{CF.account_name}.json")
+    def self.all(options={})
+      page = options[:page].presence
+      line_title = options[:line_title].presence
+      
+      if line_title.nil?
+        if page.nil?
+          resp = get("/runs/#{CF.account_name}.json")
+        else
+          resp = get("/runs/#{CF.account_name}.json", :page => page)
+        end
       else
-        get("/lines/#{CF.account_name}/#{line_title}/list_runs.json")
+        if page.nil?
+          resp = get("/lines/#{CF.account_name}/#{line_title}/list_runs.json")
+        else
+          resp = get("/lines/#{CF.account_name}/#{line_title}/list_runs.json", :page => page)
+        end
+      end
+      
+      if resp.code != 200
+        send_resp = {"error" => resp.error.message}
+        return send_resp
+      end
+
+      new_resp = []
+      if resp.code == 200
+        if resp.runs
+          if resp.runs.count > 0
+            resp.runs.each do |r|
+              new_resp << r.to_hash
+            end
+          end
+        end
+        send_resp = {"runs" => new_resp, "total_pages" => resp.total_pages, "total_runs" => resp.total_runs}
+        return send_resp
       end
     end
     
     def self.resume(run_title)
-      post("/runs/#{CF.account_name}/#{run_title}/resume.json")
+      resp = post("/runs/#{CF.account_name}/#{run_title}/resume.json")
+      @errors = resp.error.message if resp.code != 200
+      return resp
     end
   end
 end

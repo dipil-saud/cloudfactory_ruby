@@ -18,8 +18,8 @@ module CF
           end
           run = CF::Run.create(line, "keyword_matching_robot_run", [{"url"=> "http://techcrunch.com/2011/07/26/with-v2-0-assistly-brings-a-simple-pricing-model-rewards-and-a-bit-of-free-to-customer-service-software"}])
           output = run.final_output
-          output.first.final_output.first.included_keywords_count_in_contents_of_url.should eql(["3", "2", "2"])
-          output.first.final_output.first.keyword_included_in_contents_of_url.should eql(["SaaS", "see", "additional"])
+          output.first['included_keywords_count_in_contents_of_url'].should eql(["3", "2", "2"])
+          output.first['keyword_included_in_contents_of_url'].should eql(["SaaS", "see", "additional"])
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)
           line.stations.first.worker.number.should eql(1)
@@ -54,8 +54,8 @@ module CF
 
           run = CF::Run.create(line, "keyword_matching_robot_run_1", [{"url"=> "http://techcrunch.com/2011/07/26/with-v2-0-assistly-brings-a-simple-pricing-model-rewards-and-a-bit-of-free-to-customer-service-software"}])
           output = run.final_output
-          output.first.final_output.first.included_keywords_count_in_contents_of_url.should eql(["3", "2", "2"])
-          output.first.final_output.first.keyword_included_in_contents_of_url.should eql(["SaaS", "see", "additional"])
+          output.first['included_keywords_count_in_contents_of_url'].should eql(["3", "2", "2"])
+          output.first['keyword_included_in_contents_of_url'].should eql(["SaaS", "see", "additional"])
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)
           line.stations.first.worker.number.should eql(1)

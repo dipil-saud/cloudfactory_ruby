@@ -15,8 +15,8 @@ module CF
           end
           run = CF::Run.create(line, "sentiment_robot_run", [{"url"=> "http://www.thehappyguy.com/happiness-self-help-book.html"}])
           output = run.final_output
-          output.first.final_output.first.sentiment_of_url.should eql("positive")
-          output.first.final_output.first.sentiment_relevance_of_url.should eql(24.0408)
+          output.first['sentiment_of_url'].should eql("positive")
+          output.first['sentiment_relevance_of_url'].should eql(24.0408)
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)
           line.stations.first.worker.number.should eql(1)
@@ -40,8 +40,8 @@ module CF
 
           run = CF::Run.create(line, "sentiment_robot_run_1", [{"url"=> "http://www.thehappyguy.com/happiness-self-help-book.html"}])
           output = run.final_output
-          output.first.final_output.first.sentiment_of_url.should eql("positive")
-          output.first.final_output.first.sentiment_relevance_of_url.should eql(24.0408)
+          output.first['sentiment_of_url'].should eql("positive")
+          output.first['sentiment_relevance_of_url'].should eql(24.0408)
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)
           line.stations.first.worker.number.should eql(1)

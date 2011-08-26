@@ -32,6 +32,7 @@ module CF
       #   CF::Account.login("sprout@sprout-technology.com", "password")
       def login(email, passwd)
         resp = post('/account_login.json', :user => {:email => email, :password => passwd})
+        self.errors = resp.error.message if resp.code != 200
         resp
       end
     end

@@ -9,4 +9,10 @@ $LOAD_PATH.unshift(lib) if File.directory?(lib) && !$LOAD_PATH.include?(lib)
 
 require 'cf/cli'
 
-Cf::CLI.start
+begin
+  Cf::CLI.start
+rescue ArgumentError
+  $stderr.puts "\n\tError during processing: #{$!.message}\n\n"
+rescue Psych::SyntaxError
+  $stderr.puts "\n\tError during processing: #{$!.message}\n\n"
+end

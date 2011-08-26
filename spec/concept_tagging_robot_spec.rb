@@ -15,8 +15,8 @@ module CF
           end
           run = CF::Run.create(line, "concept_tagging_robot_run", [{"url"=>"www.mosexindex.com"}])
           output = run.final_output
-          output.first.final_output.first.concept_tagging_of_url.should eql(["Canada", "English language"])
-          output.first.final_output.first.concept_tagging_relevance_of_url.should eql([89.5153, 79.0912])
+          output.first['concept_tagging_of_url'].should eql(["Canada", "English language"])
+          output.first['concept_tagging_relevance_of_url'].should eql([89.5153, 79.0912])
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)
           line.stations.first.worker.number.should eql(1)
@@ -40,8 +40,8 @@ module CF
 
           run = CF::Run.create(line, "concept_tagging_robot_run_1", [{"url"=>"www.mosexindex.com"}])
           output = run.final_output
-          output.first.final_output.first.concept_tagging_of_url.should eql(["Canada", "English language"])
-          output.first.final_output.first.concept_tagging_relevance_of_url.should eql([89.5153, 79.0912])
+          output.first['concept_tagging_of_url'].should eql(["Canada", "English language"])
+          output.first['concept_tagging_relevance_of_url'].should eql([89.5153, 79.0912])
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)
           line.stations.first.worker.number.should eql(1)

@@ -28,7 +28,7 @@ module CF
           run = CF::Run.create(line, "google_translate_robot_run", [{"text"=> "I started loving Monsoon"}])
           @final_output = run.final_output
           line.stations.first.worker.number.should eq(1)
-          @final_output.first.final_output.first.translation_of_text.should eql('Empecé a amar a Monzón')
+          @final_output.first['translation_of_text'].should eql('Empecé a amar a Monzón')
         end
       end
       
@@ -50,7 +50,7 @@ module CF
 
           @final_output = run.final_output
           line.stations.first.worker.number.should eq(1)
-          @final_output.first.final_output.first.translation_of_text.should eql('Empecé a amar a Monzón')
+          @final_output.first['translation_of_text'].should eql('Empecé a amar a Monzón')
         end
       end
     end

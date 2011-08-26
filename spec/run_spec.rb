@@ -170,10 +170,10 @@ module CF
             end
           end
           run = CF::Run.create(line, "run-name-result-0111111111", File.expand_path("../../fixtures/input_data/test.csv", __FILE__))
-          @final_output = run.final_output
           # debugger
-          @final_output.first.final_output.first['first-name'].should eql("Bob")
-          @final_output.first.final_output.first['last-name'].should eql("Marley")
+          @final_output = run.final_output
+          @final_output.first['first-name'].should eql("Bob")
+          @final_output.first['last-name'].should eql("Marley")
         end
       end
 
@@ -186,13 +186,15 @@ module CF
               CF::RobotWorker.create({:station => s, :type => "text_extraction_robot", :settings => {:url => ["{{url}}"]}})
             end
             CF::Station.create({:line => l, :type => "work"}) do |s1|
-              CF::RobotWorker.create({:station => s1, :type => "keyword_matching_robot", :settings => {:content => ["{{contents_of_url}}"], :keywords => ["SaaS","see","additional","deepak","saroj"]}})
+              CF::RobotWorker.create({:station => s1, :type => "keyword_matching_robot", :settings => {:content => ["{{contents_of_url}}"], :keywords => ["SaaS","see","additional","deepak","saroj", "iPhone"]}})
             end
           end
-          run = CF::Run.create(line, "keyword_matching_robot_run_result", [{"url"=> "http://techcrunch.com/2011/07/26/with-v2-0-assistly-brings-a-simple-pricing-model-rewards-and-a-bit-of-free-to-customer-service-software"}])
+          run = CF::Run.create(line, "keyword_matching_robot_run_result", [{"url"=> "http://techcrunch.com/2011/07/26/with-v2-0-assistly-brings-a-simple-pricing-model-rewards-and-a-bit-of-free-to-customer-service-software"}, {"url"=> "http://techcrunch.com/2011/07/26/buddytv-iphone/"}])
           output = run.final_output
-          output.first.final_output.first.included_keywords_count_in_contents_of_url.should eql(["3", "2", "2"])
-          output.first.final_output.first.keyword_included_in_contents_of_url.should eql(["SaaS", "see", "additional"])
+          output.first['included_keywords_count_in_contents_of_url'].should eql(["3", "2", "2"])
+          output.first['keyword_included_in_contents_of_url'].should eql(["SaaS", "see", "additional"])
+          output.last['included_keywords_count_in_contents_of_url'].should eql(["4"])
+          output.last['keyword_included_in_contents_of_url'].should eql(["iPhone"])
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)
           line.stations.first.worker.number.should eql(1)
@@ -201,7 +203,7 @@ module CF
           line.stations.last.worker.class.should eql(CF::RobotWorker)
           line.stations.last.worker.reward.should eql(0.5)
           line.stations.last.worker.number.should eql(1)
-          line.stations.last.worker.settings.should eql({:content => ["{{contents_of_url}}"], :keywords => ["SaaS","see","additional","deepak","saroj"]})
+          line.stations.last.worker.settings.should eql({:content => ["{{contents_of_url}}"], :keywords => ["SaaS","see","additional","deepak","saroj", "iPhone"]})
           line.stations.last.worker.type.should eql("KeywordMatchingRobot")
           output_of_station_1 = CF::Run.output({:title => "keyword_matching_robot_run_result", :station => 1})
           output_of_station_2 = CF::Run.output({:title => "keyword_matching_robot_run_result", :station => 2})
@@ -249,7 +251,7 @@ module CF
           end
           run = CF::Run.create(line, "media_splitting_robot_run_5", [{"url"=> "http://media-robot.s3.amazonaws.com/media_robot/media/upload/8/ten.mov"}])
           run_1 = CF::Run.create(line, "media_splitting_robot_run_5", [{"url"=> "http://media-robot.s3.amazonaws.com/media_robot/media/upload/8/ten.mov"}])
-          run_1.errors.should eql("[\"Title is already taken for this account\"]")
+          run_1.errors.should eql(["Title is already taken for this account"])
         end
       end
 
@@ -284,7 +286,7 @@ module CF
           run = CF::Run.create(line, "media_splitting_robot_run_7", [{"url"=> "http://media-robot.s3.amazonaws.com/media_robot/media/upload/8/ten.mov"}])
           found_run = CF::Run.find("unused_title")
           found_run.code.should eql(404)
-          found_run.errors.should eql("Run document not found using selector: {:tenant_id=>BSON::ObjectId('4def16fa5511274d98000014'), \"account_id\"=>BSON::ObjectId('4def122255112748d7000003'), :title=>\"unused_title\"}")
+          found_run.errors.should eql("Run document not found using selector: {:tenant_id=>BSON::ObjectId('4def16fa5511274d98000014'), :title=>\"unused_title\"}")
         end
       end
     end
@@ -376,10 +378,9 @@ module CF
           run_2 = CF::Run.create(line_2, "progress_run_32", [{"url"=> "http://www.sprout-technology.com"}])
           
           got_run = CF::Run.all
-          got_run.first.line.title.should eql("digitizard--11111000")
-          got_run.first.title.should eql("run-name--11111000")
-          got_run.last.line.title.should eql("progress_run_line_31")
-          got_run.last.title.should eql("progress_run_31")
+          got_run['runs'].class.should eql(Array)
+          got_run['runs'].first['progress'].should eql(100)
+          got_run['runs'].first['status'].should eql("active")
         end
       end
       
@@ -395,10 +396,38 @@ module CF
           run = CF::Run.create(line, "progress_run_11", [{"url"=> "http://www.sprout-technology.com"}])
           run_1 = CF::Run.create(line, "progress_run_12", [{"url"=> "http://www.sprout-technology.com"}])
           run_2 = CF::Run.create(line, "progress_run_13", [{"url"=> "http://www.sprout-technology.com"}])
-          got_run = CF::Run.all("progress_run_line_11")
-          got_run[0].title.should eql("progress_run_11")
-          got_run[1].title.should eql("progress_run_12")
-          got_run[2].title.should eql("progress_run_13")
+          got_run = CF::Run.all({:line_title => "progress_run_line_11"})
+          got_run['runs'][0]['title'].should eql("progress_run_11")
+          got_run['runs'][1]['title'].should eql("progress_run_12")
+          got_run['runs'][2]['title'].should eql("progress_run_13")
+        end
+      end
+      
+      it "should get all runs with pagination" do
+        VCR.use_cassette "run/plain-ruby/get-run-with-page", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+          run = CF::Run.all({:page => 1})
+          run['runs'].class.should eql(Array)
+          run['runs'].first['progress'].should eql(100)
+          run['runs'].first['status'].should eql("active")
+        end
+      end
+      
+      it "should get all runs with pagination all" do
+        VCR.use_cassette "run/plain-ruby/get-run-with-page-all", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+          line = CF::Line.create("pagination_line","Digitization") do |l|
+            CF::InputFormat.new({:line => l, :name => "url", :valid_type => "url", :required => "true"})
+            CF::Station.create({:line => l, :type => "work"}) do |s|
+              CF::RobotWorker.create({:station => s, :settings => {:url => ["{{url}}"], :max_retrieve => 5, :show_source_text => true}, :type => "term_extraction_robot"})
+            end
+          end
+          25.times do |i|
+            CF::Run.create(line, "pagination_run#{i}", [{"url"=> "http://www.sprout-technology.com"}])
+          end
+          run = CF::Run.all({:page => "all"})
+          run['total_pages'].should eql(1)
+          run['runs'].class.should eql(Array)
         end
       end
     end
@@ -428,6 +457,96 @@ module CF
           resumed_run.code.should eql(200)
           resumed_run.status.should eql("resumed")
           resumed_run.title.should eql("resume_run")
+        end
+      end
+    end
+    
+    context "creation of run by adding units" do
+      it "should manually add units" do
+        VCR.use_cassette "run/block/adding_units", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+          line = CF::Line.create("adding_units","Digitization") do |l|
+            CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+            CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+            CF::Station.create({:line => l, :type => "work"}) do |s|
+              CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+              CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+                CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+                CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
+                CF::FormField.new({:form => i, :label => "Last Name", :field_type => "short_answer", :required => "true"})
+              end
+            end
+          end
+          run = CF::Run.create(line, "adding_units_run", [{"Company"=>"Apple,Inc","Website"=>"Apple.com"}])
+          added_units = CF::Run.add_units(:run_title => "adding_units_run", :units => [{"Company"=>"Apple,Inc","Website"=>"Apple.com"}, {"Company"=>"Sprout","Website"=>"sprout.com"}])
+          added_units['successfull'].should eql("sucessfully added 2 units, failed :0")
+          run.title.should eql("adding_units_run")
+        end
+      end
+      
+      it "should add units by passing file" do
+        VCR.use_cassette "run/block/adding_units_file", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+          line = CF::Line.create("adding_units_file","Digitization") do |l|
+            CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+            CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+            CF::Station.create({:line => l, :type => "work"}) do |s|
+              CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+              CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+                CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+                CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
+                CF::FormField.new({:form => i, :label => "Last Name", :field_type => "short_answer", :required => "true"})
+              end
+            end
+          end
+          run = CF::Run.create(line, "adding_units_file_run", [{"Company"=>"Sprout","Website"=>"sprout.com"}])
+          added_units = CF::Run.add_units({:run_title => "adding_units_file_run", :file => File.expand_path("../../fixtures/input_data/test.csv", __FILE__)})
+          added_units['successfull'].should eql("sucessfully added 1 units, failed :0")
+          run.title.should eql("adding_units_file_run")
+        end
+      end
+      
+      it "should throw errors for invalid input while adding units" do
+        VCR.use_cassette "run/block/adding_units_errors", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+          line = CF::Line.create("adding_units_error","Digitization") do |l|
+            CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+            CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+            CF::Station.create({:line => l, :type => "work"}) do |s|
+              CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+              CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+                CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+                CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
+                CF::FormField.new({:form => i, :label => "Last Name", :field_type => "short_answer", :required => "true"})
+              end
+            end
+          end
+          run = CF::Run.create(line, "adding_units_error_run", [{"Company"=>"Apple,Inc","Website"=>"Apple.com"}])
+          added_units = CF::Run.add_units(:run_title => "adding_units_error_run", :units => [{"Company"=>"Sprout","Url"=>"sprout.com"}])
+          added_units['error']['message'].should eql(["Extra Headers in file: [url]", "Insufficient Headers in file: [website]"])
+          run.title.should eql("adding_units_error_run")
+        end
+      end
+      
+      xit "should throw errors for empty input while adding units" do
+        VCR.use_cassette "run/block/adding_units_empty_errors", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+          line = CF::Line.create("adding_units_error_1","Digitization") do |l|
+            CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+            CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+            CF::Station.create({:line => l, :type => "work"}) do |s|
+              CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+              CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+                CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+                CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
+                CF::FormField.new({:form => i, :label => "Last Name", :field_type => "short_answer", :required => "true"})
+              end
+            end
+          end
+          run = CF::Run.create(line, "adding_units_error_run_1", [{"Company"=>"Apple,Inc","Website"=>"Apple.com"}])
+          added_units = CF::Run.add_units(:run_title => "adding_units_error_run", :units => [])
+          added_units['error']['message'].should eql(["Extra Headers in file: [url]", "Insufficient Headers in file: [website]"])
+          run.title.should eql("adding_units_error_run_1")
         end
       end
     end

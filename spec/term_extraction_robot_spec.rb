@@ -15,8 +15,8 @@ module CF
           end
           run = CF::Run.create(line, "term_extraction_run", [{"url"=> "http://www.sprout-technology.com"}])
           output = run.final_output
-          output.first.final_output.first.keyword_relevance_of_url.should eql([99.7991, 95.6566, 83.2383, 79.39450000000001, 76.0281])
-          output.first.final_output.first.keywords_of_url.should eql(["Web App", "web application", "Web App Development", "Web App Management", "world-class web development"])
+          output.first['keyword_relevance_of_url'].should eql([99.7991, 95.6566, 83.2383, 79.39450000000001, 76.0281])
+          output.first['keywords_of_url'].should eql(["Web App", "web application", "Web App Development", "Web App Management", "world-class web development"])
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)
           line.stations.first.worker.number.should eql(1)
@@ -40,8 +40,8 @@ module CF
 
           run = CF::Run.create(line, "term_extraction_run_1", [{"url"=> "http://www.sprout-technology.com"}])
           output = run.final_output
-          output.first.final_output.first.keyword_relevance_of_url.should eql([99.7991, 95.6566, 83.2383, 79.39450000000001, 76.0281])
-          output.first.final_output.first.keywords_of_url.should eql(["Web App", "web application", "Web App Development", "Web App Management", "world-class web development"])
+          output.first['keyword_relevance_of_url'].should eql([99.7991, 95.6566, 83.2383, 79.39450000000001, 76.0281])
+          output.first['keywords_of_url'].should eql(["Web App", "web application", "Web App Development", "Web App Management", "world-class web development"])
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)
           line.stations.first.worker.number.should eql(1)

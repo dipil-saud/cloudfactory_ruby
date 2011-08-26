@@ -35,7 +35,7 @@ module CF
           run = CF::Run.create(line, "media_converter_robot_run", [{"url"=> "http://media-robot.s3.amazonaws.com/media_robot/media/upload/8/ten.mov", "to" => "mpg", "audio_quality" => "320", "video_quality" => "3"}])
           @final_output = run.final_output
           line.stations.first.worker.number.should eq(1)
-          converted_url = @final_output.first.final_output.first.converted_file_from_url
+          converted_url = @final_output.first['converted_file_from_url']
           File.exist?("/Users/manish/apps/cloudfactory/public#{converted_url}").should eql(true)
         end
       end
@@ -57,7 +57,7 @@ module CF
 
           @final_output = run.final_output
           line.stations.first.worker.number.should eq(1)
-          converted_url = @final_output.first.final_output.first.converted_file_from_url
+          converted_url = @final_output.first['converted_file_from_url']
           File.exist?("/Users/manish/apps/cloudfactory/public#{converted_url}").should eql(true)
         end
       end

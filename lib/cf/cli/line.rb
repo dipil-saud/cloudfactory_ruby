@@ -27,6 +27,8 @@ end
 module Cf # :nodoc: all
   class Line < Thor # :nodoc: all
     include Cf::Config
+    include Cf::LineYamlValidator
+    
     desc "line generate LINE-TITLE", "generates a line template at <line-title>/line.yml"
     method_option :force, :type => :boolean, :default => false, :aliases => "-f", :desc => "force to overwrite the files if the line already exists, default is false"
     # method_option :with_custom_form, :type => :boolean, :default => false, :aliases => "-wcf", :desc => "generate the template with custom task form and the sample files, default is true"
@@ -60,7 +62,7 @@ module Cf # :nodoc: all
         set_target_uri(false)
         set_api_key(yaml_source)
         CF.account_name = CF::Account.info.name
-        line_dump = YAML::load(File.open(yaml_source))
+        line_dump = YAML::load(File.read(yaml_source).strip)
         line_title = line_dump['title'].parameterize
       else
         set_target_uri(false)
@@ -68,22 +70,33 @@ module Cf # :nodoc: all
         CF.account_name = CF::Account.info.name
         line_title = options['line'].parameterize
       end
-      
-      line = CF::Line.find(line_title)
-      if line.errors.blank?
+
+      resp_line = CF::Line.find(line_title)
+      line = Hashie::Mash.new(resp_line)
+      if line.title == line_title
         if options.force
           CF::Line.destroy(line_title, :forced => true)
           say("The line #{line_title} deleted forcefully!", :yellow)
         else
-          # say("!! Warning !!\nThe following are existing production runs based on this line.\n", :cyan)
-          # Cf::Production.new.list
-          say("!! Warning !!\nThere are existing production runs based on this line.\n", :yellow)
-          delete_forcefully = agree("Do you still want to delete this line? [y/n] ")
-          if delete_forcefully
-            CF::Line.destroy(line_title, :forced => true)
-            say("The line #{line_title} deleted successfully!", :yellow)
+          
+          # Check whether this line has existing runs or not
+          resp_runs = CF::Run.all({:line_title => line_title})
+
+          if resp_runs.has_key?("runs") && resp_runs['runs'].present?
+            say("!!! Warning !!!\nThe following are the existing production runs based on this line.", :cyan)
+            existing_runs = Cf::Production.new([],{'line' => line_title, 'all' => true})
+            existing_runs.list
+            
+            delete_forcefully = agree("Do you still want to delete this line? [y/n] ")
+            if delete_forcefully
+              CF::Line.destroy(line_title, :forced => true)
+              say("The line #{line_title} deleted successfully!", :yellow)
+            else
+              say("Line deletion aborted!", :cyan)
+            end
           else
-            say("Line deletion aborted!", :cyan)
+            CF::Line.destroy(line_title)
+            say("The line #{line_title} deleted successfully!", :yellow)
           end
         end
       else
@@ -114,8 +127,7 @@ module Cf # :nodoc: all
         say "The line.yml file does not exist in this directory", :red
         return
       end
-      
-      errors = LineYamlValidator.validate(yaml_source)
+      errors = validate(yaml_source)
       
       if errors.present?
         say("Invalid line.yml file. Correct its structure as per the errors shown below.", :red)
@@ -128,10 +140,11 @@ module Cf # :nodoc: all
 
         CF.account_name = CF::Account.info.name
 
-        line_dump = YAML::load(File.open(yaml_source))
+        line_dump = YAML::load(File.read(yaml_source).strip)
         line_title = line_dump['title'].parameterize
         line_description = line_dump['description']
         line_department = line_dump['department']
+        line_public = line_dump['public']
         
         line = CF::Line.info(line_title)
         if line.error.blank? && options.force? 
@@ -146,7 +159,7 @@ module Cf # :nodoc: all
             say("Line creation aborted!!", :yellow) and exit(1)
           end
         end
-        line = CF::Line.new(line_title, line_department, :description => line_description)
+        line = CF::Line.new(line_title, line_department, {:description => line_description, :public => line_public})
         say "Creating new assembly line: #{line.title}", :green
         say("Error: #{line.errors}", :red) and exit(1) if line.errors.present?
         
@@ -169,16 +182,17 @@ module Cf # :nodoc: all
 
         # Creation of Station
         stations = line_dump['stations']
-        stations.each do |station_file|
+        stations.each_with_index do |station_file, s_index|
           type = station_file['station']['station_type']
           index = station_file['station']['station_index']
           input_formats_for_station = station_file['station']['input_formats']
+          batch_size = station_file['station']['batch_size']
           if type == "tournament"
             jury_worker = station_file['station']['jury_worker']
             auto_judge = station_file['station']['auto_judge']
-            station_params = {:line => line, :type => type, :jury_worker => jury_worker, :auto_judge => auto_judge, :input_formats => input_formats_for_station}
+            station_params = {:line => line, :type => type, :jury_worker => jury_worker, :auto_judge => auto_judge, :input_formats => input_formats_for_station, :batch_size => batch_size}
           else
-            station_params = {:line => line, :type => type, :input_formats => input_formats_for_station}
+            station_params = {:line => line, :type => type, :input_formats => input_formats_for_station, :batch_size => batch_size}
           end
           station = CF::Station.create(station_params) do |s|
             say "Adding Station #{index}: #{s.type}", :green
@@ -244,14 +258,21 @@ module Cf # :nodoc: all
               html_file = station_file['station']['custom_task_form']['html']
               html = File.read("#{line_source}/station_#{station_file['station']['station_index']}/#{html_file}")
               css_file = station_file['station']['custom_task_form']['css']
-              css = File.read("#{line_source}/station_#{station_file['station']['station_index']}/#{css_file}")
+              css = File.read("#{line_source}/station_#{station_file['station']['station_index']}/#{css_file}") if File.exist?("#{line_source}/station_#{s_index+1}/#{css_file}")
               js_file = station_file['station']['custom_task_form']['js']
-              js = File.read("#{line_source}/station_#{station_file['station']['station_index']}/#{js_file}")
+              js = File.read("#{line_source}/station_#{station_file['station']['station_index']}/#{js_file}") if File.exist?("#{line_source}/station_#{s_index+1}/#{js_file}")
               form = CF::CustomTaskForm.create({:station => s, :title => title, :instruction => instruction, :raw_html => html, :raw_css => css, :raw_javascript => js})
               say_status "form", "CustomTaskForm '#{form.title}'"
               display_error(line_title, "#{form.errors}") if form.errors.present?
             end
 
+          end
+        
+          output_formats = line_dump['output_formats'].presence
+          if output_formats
+            output_format = CF::OutputFormat.new(output_formats.merge(:line => line))
+            say "Adding Output Format #{output_formats}", :green
+            display_error(line_title, "#{output_format.errors}") if output_format.errors.present?
           end
         end
         say " ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁", :white
@@ -261,6 +282,8 @@ module Cf # :nodoc: all
     end
 
     desc "line list", "List your lines"
+    method_option :page, :type => :numeric, :aliases => '-p', :desc => "page number"
+    method_option :all, :type => :boolean, :default => false, :aliases => '-a', :desc => "list all the lines without pagination"
     def list
       line_source = Dir.pwd
       yaml_source = "#{line_source}/line.yml"
@@ -268,14 +291,32 @@ module Cf # :nodoc: all
       set_target_uri(false)
       set_api_key(yaml_source)
       CF.account_name = CF::Account.info.name
-      lines = CF::Line.all
-      lines.sort! {|a, b| a[:name] <=> b[:name] }
-      say "\n"
-      say("No Lines", :yellow) if lines.blank?
+      
+      if options.all
+        resp_lines = CF::Line.all(:page => 'all')
+        current_page = 1
+      else
+        if page = options['page'].presence
+          resp_lines = CF::Line.all(:page => page)
+          current_page = page
+        else
+          resp_lines = CF::Line.all
+          current_page = 1
+        end
+      end
 
+      lines = resp_lines['lines'].presence
+      say "\n"
+      say("You don't have any lines to list", :yellow) and return if lines.blank?
+      
+      if resp_lines['total_pages']
+        say("Showing page #{current_page} of #{resp_lines['total_pages']}\tTotal lines: #{resp_lines['total_lines']}")
+      end
+      lines.sort! { |a, b| a['title'] <=> b['title'] }
       lines_table = table do |t|
         t.headings = ["Line Title", 'URL']
         lines.each do |line|
+          line = Hashie::Mash.new(line)
           t << [line.title, "http://#{CF.account_name}.cloudfactory.com/lines/#{CF.account_name}/#{line.title.parameterize}"]
         end
       end
@@ -289,6 +330,37 @@ module Cf # :nodoc: all
         text
       end
     }
+
+    desc "line inspect", "list the details of the line"
+    method_option :line, :type => :string, :aliases => "-l", :desc => "specify the line-title to inspect"
+    # method_option :verbose, :type => :boolean, :aliases => "-v", :desc => "gives the detailed structure of the line"
+    def inspect
+      if options['line'].blank?
+        line_source = Dir.pwd
+        yaml_source = "#{line_source}/line.yml"
+        say("The line.yml file does not exist in this directory", :red) and exit(1) unless File.exist?(yaml_source)
+        set_target_uri(false)
+        set_api_key(yaml_source)
+        CF.account_name = CF::Account.info.name
+
+        line_dump = YAML::load(File.read(yaml_source).strip)
+        line_title = line_dump['title'].parameterize
+      else
+        set_target_uri(false)
+        set_api_key
+        CF.account_name = CF::Account.info.name
+        line_title = options['line'].parameterize
+      end
+      
+      line = CF::Line.inspect(line_title)
+      line = Hashie::Mash.new(line)
+      if line.error.blank?
+        say("\nThe following is the structure of the line: #{line_title}\n", :green)
+        ap line
+      else
+        say("Error: #{line.error.message}\n", :red)
+      end
+    end
 
   end
 end

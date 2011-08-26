@@ -16,8 +16,8 @@ module CF
           end
           run = CF::Run.create(line, "mailer_robot_run", [{"to"=> "manish.das@sprout-technology.com"}])
           output = run.final_output
-          output.first.final_output.first.recipients_of_to.should eql([["manish.das@sprout-technology.com"]])
-          output.first.final_output.first.sent_message_for_to.should eql(["<html><body><h1>Hello manish.das@sprout-technology.com Welcome to CLoudfactory!!!!</h1><p>Thanks for using!!!!</p></body></html>"])
+          output.first['recipients_of_to'].should eql([["manish.das@sprout-technology.com"]])
+          output.first['sent_message_for_to'].should eql(["<html><body><h1>Hello manish.das@sprout-technology.com Welcome to CLoudfactory!!!!</h1><p>Thanks for using!!!!</p></body></html>"])
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.01)
           line.stations.first.worker.number.should eql(1)
@@ -42,8 +42,8 @@ module CF
 
           run = CF::Run.create(line, "mailer_robot_run_1", [{"to"=> "manish.das@sprout-technology.com"}])
           output = run.final_output
-          output.first.final_output.first.recipients_of_to.should eql([["manish.das@sprout-technology.com"]])
-          output.first.final_output.first.sent_message_for_to.should eql(["<html><body><h1>Hello manish.das@sprout-technology.com Welcome to CLoudfactory!!!!</h1><p>Thanks for using!!!!</p></body></html>"])
+          output.first['recipients_of_to'].should eql([["manish.das@sprout-technology.com"]])
+          output.first['sent_message_for_to'].should eql(["<html><body><h1>Hello manish.das@sprout-technology.com Welcome to CLoudfactory!!!!</h1><p>Thanks for using!!!!</p></body></html>"])
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.01)
           line.stations.first.worker.number.should eql(1)

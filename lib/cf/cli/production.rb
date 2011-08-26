@@ -12,85 +12,116 @@ module Cf # :nodoc: all
     
     desc "production start <run-title>", "creates a production run with input data file at input/<run-title>.csv"
     method_option :input_data, :type => :string, :aliases => "-i", :desc => "the name of the input data file"
-    method_option :live, :type => :boolean, :default => false, :aliases => "-l", :desc => "force the host to set to live mturk environment"
-    def start(title=nil)
-      
+    method_option :live, :type => :boolean, :default => false, :desc => "specifies sandbox or live mode"
+    method_option :line, :type => :string, :aliases => "-l", :desc => "public line to use to do the production run. the format should be <account_name>/<line-title> e.g. millisami/brandiator"
+    def start(title=nil)      
       line_destination  = Dir.pwd
       yaml_source       = "#{line_destination}/line.yml"
+
+      set_target_uri(options[:live])
+      set_api_key
+      CF.account_name = CF::Account.info.name
       
-      unless File.exist?("#{yaml_source}")
-        say("The current directory is not a valid line directory.", :red) and return
+      if File.exist?("#{yaml_source}")
+        line_yaml_dump = YAML::load(File.read(yaml_source).strip)
+        line_title = line_yaml_dump['title'].parameterize        
+        line = CF::Line.find(line_title)
+        line = Hashie::Mash.new(line)
+        if line.error.blank?
+          line_title = line_title
+        else
+          say("#{line.error.message}", :red) and return
+        end
+      elsif options[:line].present?
+        line = CF::Line.find(options[:line])
+        line = Hashie::Mash.new(line)
+        if line.error.blank?
+          line_title = options[:line]
+        else
+          say("#{line.error.message}", :red) and return
+        end
+      else
+        say("Looks like you're not in the Line directory or did not provide the line title to use the line", :red) and return
       end
 
-      line_yaml_dump = YAML::load(File.open(yaml_source))
-      line_title = line_yaml_dump['title'].parameterize
-
       if title.nil?
-        run_title       = "#{line_title}-#{Time.new.strftime('%y%b%e-%H%M%S')}".downcase
+        if line_title =~  /\w\/\w/
+          run_title       = "#{line_title.split("/").last}-#{Time.new.strftime('%y%b%e-%H%M%S')}".downcase
+        else
+          run_title       = "#{line_title}-#{Time.new.strftime('%y%b%e-%H%M%S')}".downcase
+        end
       else
         run_title       = "#{title.parameterize}-#{Time.new.strftime('%y%b%e-%H%M%S')}".downcase
       end
 
-      if !options[:input_data].nil?
-        input_data = "input/#{options[:input_data]}"
+      input_data = options[:input_data].presence
+      
+      if input_data =~ /^\// #checking absolute input data path
+        input_data_file = input_data
       else
-        input_data_dir = "#{line_destination}/input"
-        input_files = Dir["#{input_data_dir}/*.csv"]
-        file_count = input_files.size
-        case file_count
-        when 0
-          say("No input data file present inside the input folder", :red) and return
-        when 1
-          input_data = "input/#{extract_name(input_files.first)}"
-        else
-          # Let the user choose the file
-          chosen_file = nil
-          choose do |menu|
-            menu.header = "Input data files"
-            menu.prompt = "Please choose which file to be used as input data: "
+        if Dir.exist?("#{line_destination}/input")
+          input_data_dir = "#{line_destination}/input"
+          input_files = Dir["#{input_data_dir}/*.csv"]
+          file_count = input_files.size
+          case file_count
+          when 0
+            say("No input data file present inside the input folder", :red) and return
+          when 1
+            input_data_file = "#{Dir.pwd}/input/#{extract_name(input_files.first)}"
+          else
+            # Let the user choose the file
+            chosen_file = nil
+            choose do |menu|
+              menu.header = "Input data files"
+              menu.prompt = "Please choose which file to be used as input data: "
 
-            input_files.each do |item|
-              menu.choice(extract_name(item)) do
-                chosen_file = extract_name(item)
-                say("Using the file #{chosen_file} as input data")
+              input_files.each do |item|
+                menu.choice(extract_name(item)) do
+                  chosen_file = extract_name(item)
+                  say("Using the file #{chosen_file} as input data")
+                end
               end
             end
+            input_data_file = "#{Dir.pwd}/input/#{chosen_file}"
           end
-          input_data = "input/#{chosen_file}"
+        else
+          unless File.exist?(input_data)
+            say("The input data file named #{input_data} doesn't exist", :red) and return
+          end
+          input_data_file = "#{Dir.pwd}/#{input_data}"
         end
       end
       
-      unless File.exist?(input_data)
-        say("The input data file named #{input_data} is missing.", :red) and return
+      unless File.exist?(input_data_file)
+        say("The input data file named #{input_data} is missing", :red) and return
       end
       
-      set_target_uri(options[:live])
+
       # before starting the run creation process, we need to make sure whether the line exists or not
       # if not, then we got to first create the line and then do the production run
       # else we just simply do the production run
-      set_api_key(yaml_source)
-      CF.account_name = CF::Account.info.name
-      line = CF::Line.info(line_title)
-      input_data_file = "#{Dir.pwd}/#{input_data}"
+      
       if line.error.blank?
         say "Creating a production run with title #{run_title}", :green
-        run = CF::Run.create(line, run_title, input_data_file)
+        run = CF::Run.create(line_title, run_title, input_data_file)
         if run.errors.blank?
           display_success_run(run)
         else
           say("Error: #{run.errors}", :red)
         end
       else
-        # first create line
-        say("Creating the line: #{line_title}", :green)
-        Cf::Line.new.create
-        # Now create a production run with the title run_title
-        say "Creating a production run with title #{run_title}", :green
-        run = CF::Run.create(CF::Line.info(line_title), run_title, input_data_file)
-        if run.errors.blank?
-          display_success_run(run)
-        else
-          say("Error: #{run.errors}", :red)
+        if File.exist?("#{yaml_source}") and !line_title =~ /\w\/\w/
+          # first create line only if its in the valid line directory
+          say("Creating the line: #{line_title}", :green)
+          Cf::Line.new.create
+          # Now create a production run with the title run_title
+          say "Creating a production run with title #{run_title}", :green
+          run = CF::Run.create(CF::Line.info(line_title), run_title, input_data_file)
+          if run.errors.blank?
+            display_success_run(run)
+          else
+            say("Error: #{run.errors}", :red)
+          end
         end
       end
     end
@@ -103,32 +134,70 @@ module Cf # :nodoc: all
     end
     
     desc "production list", "list the production runs"
-    method_option :line, :type => :string, :aliases => "-l", :desc => "the title of the line"
+    method_option :line, :type => :string, :aliases => "-l", :desc => "the title of the line, if the line title is not given, it will show all the production runs under your account"
+    method_option :page, :type => :numeric, :aliases => "-p", :desc => "page number"
+    method_option :all, :type => :boolean, :default => false, :aliases => '-a', :desc => "list all the production runs"
     def list
       set_target_uri(false)
       set_api_key
       CF.account_name = CF::Account.info.name
-      if options['line'].present?
-        runs = CF::Run.all(options['line'].parameterize)
-      else
-        runs = CF::Run.all
-      end
+      param = {}
+      current_page = 1
 
-      unless runs.kind_of?(Array)
-        if runs.error.present?
-          say("No Runs\n#{runs.error.message}", :red) and exit(1)
+      if options['line'].present?
+        line_title = options['line'].parameterize
+        param.merge!({:line_title => line_title})
+
+        if options['all']
+          param.merge!({:page => "all"})
+          current_page = 1
+        end
+        
+        if page = options['page'].presence
+          param.merge!({:page => page})
+          current_page = page
+        end
+
+      else
+        if options['all']
+          param = {:page => "all"}
+          current_page = 1
+        end
+
+        if page = options['page'].presence
+          param.merge!({:page => page})
+          current_page = page
         end
       end
 
-      runs.sort! {|a, b| a[:name] <=> b[:name] }
+      resp_runs = CF::Run.all(param)
+      
+      if resp_runs.has_key?('error')
+        say("#{resp_runs['error']}", :red) and exit(1)
+      end
+      
+      if resp_runs.has_key?("runs") && resp_runs['runs'].blank?
+        say("\nRun list is empty.\n", :yellow) and return
+      end
+      
+      if resp_runs['total_pages']
+        say("\nShowing page #{current_page} of #{resp_runs['total_pages']} (Total runs: #{resp_runs['total_runs']})")
+      end
+      runs = resp_runs['runs'].presence
+      runs.sort! {|a, b| a['title'] <=> b['title'] }
       runs_table = table do |t|
         t.headings = ["Run Title", 'URL']
         runs.each do |run|
+          run = Hashie::Mash.new(run)
           t << [run.title, "http://#{CF.account_name}.cloudfactory.com/runs/#{CF.account_name}/#{run.title}"]
         end
       end
       say("\n")
-      say(runs_table)
+      if runs_table.rows.present?
+        say(runs_table)
+      else
+        say("No production run for line #{line_title}", :yellow)
+      end
     end
     
     desc "production resume", "resume a paused production run"
@@ -146,6 +215,35 @@ module Cf # :nodoc: all
       # if result.status == "resumed"
       say("Run with title \"#{result.title}\" is resumed!", :green)
       # end
-    end    
+    end   
+    
+    desc "production add_units", "add units to already existing production run"
+    method_option :run_title, :type => :string, :required => true, :aliases => "-t", :desc => "the title of the run to resume"
+    method_option :input_data, :type => :string, :required => true, :aliases => "-i", :desc => "the path of the input data file"
+    
+    def add_units
+      set_target_uri(false)
+      set_api_key
+      CF.account_name = CF::Account.info.name
+      run_title = options[:run_title].parameterize
+      input_data = options[:input_data].presence
+      
+      if input_data =~ /^\// #checking absolute input data path
+        input_data_file = input_data
+      else
+        unless File.exist?(input_data)
+          say("The input data file named #{input_data} doesn't exist", :red) and return
+        end
+        input_data_file = "#{Dir.pwd}/#{input_data}"
+      end
+      units = CF::Run.add_units({:run_title => run_title, :file => input_data_file})
+      if units['error'].present?
+        say("Error: #{units['error']['message']}", :red) and exit(1)
+      end
+
+      # if result.status == "resumed"
+      say("\"#{units['successfull']}\"!", :green)
+      # end
+    end 
   end
 end

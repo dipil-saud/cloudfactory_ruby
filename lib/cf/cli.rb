@@ -8,6 +8,8 @@ require 'fileutils'
 require 'thor'
 require "highline/import"
 require 'csv-hash'
+require 'awesome_print'
+require 'active_support/time_with_zone'
 
 require File.expand_path('../../cf', __FILE__) #=> requiring the gem
 require 'active_support/core_ext/string/inflections'
@@ -15,13 +17,16 @@ require 'active_support/core_ext/object/blank'
 
 cli_directory = File.expand_path("../cf/cli", File.dirname(__FILE__))
 require "#{cli_directory}/config"
+require "#{cli_directory}/line_yaml_validator"
 require "#{cli_directory}/line"
 require "#{cli_directory}/form"
 require "#{cli_directory}/production"
-require "#{cli_directory}/line_yaml_validator"
+
 
 if ENV['TEST']
   require 'ruby-debug'
+  ::Debugger.start
+  ::Debugger.settings[:autoeval] = true if ::Debugger.respond_to?(:settings)
 end
 
 module Cf # :nodoc: all
@@ -38,8 +43,9 @@ module Cf # :nodoc: all
       
       set_target_uri(false)
       resp = CF::Account.login(email, passwd)
+      
       if resp.error.blank? and resp.api_key.present?
-        File.open(config_file, 'w') {|f| f.write({ :target_url => CF.api_url, :api_version => CF.api_version, :api_key => resp.api_key }.to_yaml) }
+        File.open(config_file, 'w') {|f| f.write("#Don't change this file unless you know what you're doing\n" + { :target_url => CF.api_url, :api_version => CF.api_version, :api_key => resp.api_key, :account_name => resp.account_name, :email => email.strip }.to_yaml) }
         say("\nNow you're logged in.\nTo get started, run cf help\n", :green)
       else
         say("\n#{resp.error.message}\nTry again with valid one.\n", :red)
@@ -49,7 +55,7 @@ module Cf # :nodoc: all
     no_tasks do
       def ask_password(message)
         ::HighLine.new.ask(message) do |q| 
-          q.echo = false
+          q.echo = '*'
         end
       end
     end

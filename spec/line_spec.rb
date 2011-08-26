@@ -103,7 +103,7 @@ describe CF::Line do
           CF::Line.new("Digitizeard---#{i}", "Digitization", {:public => false, :description => "#{i}-this is description"})
         end
         lines = CF::Line.all
-        lines.last.title.should eq("digitizeard---4")
+        lines.class.should eql(Hash)
       end
     end
 
@@ -176,7 +176,7 @@ describe CF::Line do
         resp = CF::Line.destroy("Digitizerd-2")
         resp.code.should eql(200)
         deleted_resp = CF::Line.info(line)
-        deleted_resp.error.message.should eql("Line document not found using selector: {:public=>true, :title=>\"digitizerd-2\"}")
+        deleted_resp.error.message.should eql("Line not found for title: digitizerd-2 under your account")
       end
     end
   end
@@ -346,8 +346,8 @@ describe CF::Line do
         forced_delete = CF::Line.destroy("delete_line_of_run", :forced => true)
 
         search_line = CF::Line.find("delete_line_of_run")
-        search_line.code.should eql(404)
-        search_line.error.message.should eql("Line document not found using selector: {:public=>true, :title=>\"delete_line_of_run\"}")
+        search_line['code'].should eql(404)
+        search_line['error']['message'].should eql("Line document not found using selector: {:public=>true, :title=>\"delete_line_of_run\"}")
       end
     end
   end
@@ -367,9 +367,193 @@ describe CF::Line do
         end
         line_details = CF::Line.inspect("line_details")
         line_input_format_id = line_details['input_formats'].first['id']
-        from_field_id = line_details['stations'].first['form_fields'].first['id']
+        form_field_id = line_details['stations'].first['form_fields'].first['id']
         station_input_format_id = line_details['stations'].first['input_formats'].first['id']
-        line_details.should eql({"title"=>"line_details", "description"=>"", "public"=>false, "department"=>{"name"=>"Digitization"}, "app"=>{"name"=>"default", "email"=>"manish.das@sprout-technology.com", "notification_url"=>"http://www.cloudfactory.com"}, "code"=>200, "input_formats"=>[{"id"=>"#{line_input_format_id}", "name"=>"Company", "required"=>true, "valid_type"=>"general", "source_station_index"=>0}], "stations"=>[{"index"=>1, "type"=>"WorkStation", "worker"=>{"number"=>1, "reward"=>20, "type"=>"HumanWorker", "stat_badge"=>{"approval_rating"=>80, "abandonment_rate"=>30, "country"=>nil}}, "form"=>{"title"=>"Enter text from a business card image", "instruction"=>"Describe"}, "form_fields"=>[{"id"=>"#{from_field_id}", "label"=>"First Name", "field_type"=>"short_answer", "hint"=>nil, "required"=>true, "unique"=>nil, "hide_label"=>nil, "value"=>nil}], "input_formats"=>[{"id"=>"#{station_input_format_id}", "name"=>"Company", "required"=>true, "valid_type"=>"general", "source_station_index"=>0}]}]})
+        line_details.should eql({"title"=>"line_details", "description"=>"", "public"=>false, "department"=>{"name"=>"Digitization"}, "app"=>{"name"=>"default", "email"=>"manish.das@sprout-technology.com", "notification_url"=>"http://www.cloudfactory.com"}, "code"=>200, "input_formats"=>[{"id"=>"#{line_input_format_id}", "name"=>"Company", "required"=>true, "valid_type"=>"general", "source_station_index"=>0}], "stations"=>[{"index"=>1, "type"=>"WorkStation", "worker"=>{"number"=>1, "reward"=>20, "type"=>"HumanWorker", "stat_badge"=>{"approval_rating"=>80, "abandonment_rate"=>30, "country"=>nil}}, "form"=>{"title"=>"Enter text from a business card image", "instruction"=>"Describe"}, "form_fields"=>[{"id"=>"#{form_field_id}", "label"=>"First Name", "field_type"=>"short_answer", "hint"=>nil, "required"=>true, "unique"=>nil, "hide_label"=>nil, "value"=>nil}], "input_formats"=>[{"id"=>"#{station_input_format_id}", "name"=>"Company", "required"=>true, "valid_type"=>"general", "source_station_index"=>0}]}]})
+      end
+    end
+    
+    it "for robot worker" do
+      VCR.use_cassette "lines/block/line-details_robot_worker", :record => :new_episodes do
+      # WebMock.allow_net_connect!
+        line = CF::Line.create("line_details_robot","Digitization") do |l|
+          CF::InputFormat.new({:line => l, :name => "text", :valid_type => "general", :required => "true"})
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::RobotWorker.create({:station => s, :type => "entity_extraction_robot", :settings => {:document => ["Franz Kafka and George Orwell are authors. Ludwig Von Beethoven and Mozart are musicians. China and Japan are countries"]}})
+          end
+        end
+        line_details = CF::Line.inspect("line_details_robot")
+        line_input_format_id = line_details['input_formats'].first['id']
+        station_input_format_id = line_details['stations'].first['input_formats'].first['id']
+        worker_id = line_details['stations'].first['worker']['id']
+        line_details.should eql({"title"=>"line_details_robot", "description"=>"", "department"=>"Digitization", "code"=>200, "input_formats"=>[{"id"=>"#{line_input_format_id}", "name"=>"text", "required"=>true, "valid_type"=>"general"}], "stations"=>[{"index"=>1, "type"=>"WorkStation", "worker"=>{"id"=>"#{worker_id}", "number"=>1, "reward"=>0.5, "type"=>"EntityExtractionRobot"}, "input_formats"=>[{"id"=>"#{station_input_format_id}", "name"=>"text", "required"=>true, "valid_type"=>"general"}]}]})
+      end
+    end
+    
+    it "with skill test feature" do
+      VCR.use_cassette "lines/block/line-details_skill_test", :record => :new_episodes do
+      # WebMock.allow_net_connect!
+        badge = 
+        {
+          :title => 'Football Fanatic', 
+          :description => "This qualification allows you to perform work at stations which have this badge.", 
+          :max_badges => 3, 
+          :test => 
+          {
+            :input => {:name => "Lionel Andres Messi", :country => "Argentina"},
+            :expected_output => 
+            [{:birthplace => "Rosario, Santa Fe, Argentina",:match_options => {:tolerance => 10, :ignore_case => true }},{:position => "CF",:match_options => {:tolerance => 1 }},{:"current-club" => "Barcelona",:match_options => {:tolerance => 1, :ignore_case => false }}]
+          }
+        }
+        line = CF::Line.create("line_details_skill_test", "Digitization") do |l|
+          CF::InputFormat.new({:line => l, :name => "image_url", :required => true, :valid_type => "url"})
+          CF::Station.create({:line =>l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20, :skill_badge => badge})
+            CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+              CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+            end
+          end
+        end
+        line_details = CF::Line.inspect("line_details_skill_test")
+        line_input_format_id = line_details['input_formats'].first['id']
+        station_input_format_id = line_details['stations'].first['input_formats'].first['id']
+        form_field_id = line_details['stations'].first['form_fields'].first['id']
+        worker_id = line_details['stations'].first['worker']['id']
+        line_details.should eql({"title"=>"line_details_skill_test", "description"=>"", "department"=>"Digitization", "code"=>200, "input_formats"=>[{"id"=>"#{line_input_format_id}", "name"=>"image_url", "required"=>true, "valid_type"=>"url"}], "stations"=>[{"index"=>1, "type"=>"WorkStation", "worker"=>{"id"=>"#{worker_id}", "number"=>1, "reward"=>20, "type"=>"HumanWorker", "stat_badge"=>{"abandonment_rate"=>30, "approval_rating"=>80, "country"=>nil, "adult"=>nil}, "skill_badge"=>nil}, "form"=>{"title"=>"Enter text from a business card image", "instruction"=>"Describe"}, "form_fields"=>[{"id"=>"#{form_field_id}", "label"=>"First Name", "field_type"=>"short_answer", "hint"=>nil, "required"=>true, "unique"=>nil, "hide_label"=>nil, "value"=>nil}], "input_formats"=>[{"id"=>"#{station_input_format_id}", "name"=>"image_url", "required"=>true, "valid_type"=>"url"}]}]})
+      end
+    end
+    
+    it "should get all lines with pagination" do
+      VCR.use_cassette "lines/plain-ruby/line_pagination", :record => :new_episodes do
+      # WebMock.allow_net_connect!
+        line = CF::Line.all(:page => 1)
+        line.class.should eql(Hash)
+      end
+    end
+    
+    it "should get all lines with pagination all" do
+      VCR.use_cassette "lines/plain-ruby/line_pagination_all", :record => :new_episodes do
+      # WebMock.allow_net_connect!
+        25.times do |i|
+          CF::Line.new("lines-listing--#{i}", "Digitization", {:public => true, :description => "#{i}-this is description"})
+        end
+        line = CF::Line.all(:page => "all")
+        line['total_pages'].should eql(1)
+        line['lines'].class.should eql(Array)
+      end
+    end
+  end
+  
+  context "get a line of other account" do
+    it "as public line" do
+      VCR.use_cassette "lines/plain-ruby/public-line", :record => :new_episodes do
+      # WebMock.allow_net_connect!
+        got_line = CF::Line.find("hero/dummy")
+        got_line['title'].should eql("dummy")
+        got_line['public'].should eql(true)
+        
+        run = CF::Run.create("hero/dummy", "dummy_run", [{"text" => "run for public line of another account"}])
+        run.title.should eql("dummy_run")
+        run.input.should eql([{"text" => "run for public line of another account"}])
+      end
+    end
+    
+    it "as private line" do
+      VCR.use_cassette "lines/plain-ruby/private-line", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+        got_line = CF::Line.find("hero/dummy_false")
+        got_line['code'].should eql(404)
+        got_line['error']['message'].should eql("Line with title: dummy_false under account hero is not public")
+      end
+    end
+  end
+  
+  context "create line with output format" do
+    it "should create in block Dsl way with two stations" do
+      # WebMock.allow_net_connect!
+      VCR.use_cassette "lines/block/create-output-format", :record => :new_episodes do
+        line = CF::Line.create("line_with_output_format","Digitization") do |l|
+          CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+          CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 10})
+            CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+              CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+              CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
+              CF::FormField.new({:form => i, :label => "Last Name", :field_type => "short_answer", :required => "true"})
+            end
+          end
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+            CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+              CF::FormField.new({:form => i, :label => "Address", :field_type => "short_answer", :required => "true"})
+              CF::FormField.new({:form => i, :label => "Mobile", :field_type => "short_answer"})
+              CF::FormField.new({:form => i, :label => "Email", :field_type => "email", :required => "true"})
+            end
+          end
+          CF::OutputFormat.new({:line => l, :station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+        end
+        line.title.should eq("line_with_output_format")
+        line.input_formats.first.name.should eql("Company")
+        line.stations.first.type.should eq("WorkStation")
+        line.stations.first.worker.number.should eq(1)
+        line.stations.first.worker.reward.should eq(10)
+        line.output_formats.settings.should eql({:station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+      end
+    end
+    
+    it "should create in plain ruby way with two stations" do
+      # WebMock.allow_net_connect!
+      VCR.use_cassette "lines/plain-ruby/create-output-format", :record => :new_episodes do
+        line = CF::Line.create("line_with_output_format_1","Digitization") do |l|
+          CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+          CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 10})
+            CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+              CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+              CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
+              CF::FormField.new({:form => i, :label => "Last Name", :field_type => "short_answer", :required => "true"})
+            end
+          end
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+            CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+              CF::FormField.new({:form => i, :label => "Address", :field_type => "short_answer", :required => "true"})
+              CF::FormField.new({:form => i, :label => "Mobile", :field_type => "short_answer"})
+              CF::FormField.new({:form => i, :label => "Email", :field_type => "email", :required => "true"})
+            end
+          end
+        end
+        output_format = CF::OutputFormat.new({:station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+        line.output_formats output_format
+        line.title.should eq("line_with_output_format_1")
+        line.input_formats.first.name.should eql("Company")
+        line.stations.first.type.should eq("WorkStation")
+        line.stations.first.worker.number.should eq(1)
+        line.stations.first.worker.reward.should eq(10)
+        line.output_formats.settings.should eql({:station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+      end
+    end
+  
+    it "should through error if line is incomplete" do
+      # WebMock.allow_net_connect!
+      VCR.use_cassette "lines/block/create-output-format-error", :record => :new_episodes do
+        line = CF::Line.create("line_with_output_format","Digitization") do |l|
+          CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+          CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+          CF::Station.create({:line => l, :type => "work"}) do |s|
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 10})
+            # CF::TaskForm.new({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) 
+          end
+          CF::OutputFormat.new({:line => l, :station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+        end
+        line.title.should eq("line_with_output_format")
+        line.input_formats.first.name.should eql("Company")
+        line.stations.first.type.should eq("WorkStation")
+        line.stations.first.worker.number.should eq(1)
+        line.stations.first.worker.reward.should eq(10)
+        line.output_formats.errors.should eql("Line is not complete or valid")
       end
     end
   end

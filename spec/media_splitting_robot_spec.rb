@@ -15,8 +15,8 @@ module CF
           end
           run = CF::Run.create(line, "media_splitting_robot_run", [{"url"=> "http://media-robot.s3.amazonaws.com/media_robot/media/upload/8/ten.mov"}])
           output = run.final_output
-          converted_url_1= output.first.final_output.first.splits_of_url.first
-          converted_url_2= output.first.final_output.first.splits_of_url.last
+          converted_url_1= output.first['splits_of_url'].first
+          converted_url_2= output.first['splits_of_url'].last
           File.exist?("/Users/manish/apps/cloudfactory/public#{converted_url_1}").should eql(true)
           File.exist?("/Users/manish/apps/cloudfactory/public#{converted_url_2}").should eql(true)
           line.stations.first.worker.class.should eql(CF::RobotWorker)
@@ -42,8 +42,8 @@ module CF
 
           run = CF::Run.create(line, "media_splitting_robot_run_1", [{"url"=> "http://media-robot.s3.amazonaws.com/media_robot/media/upload/8/ten.mov"}])
           output = run.final_output
-          converted_url_1= output.first.final_output.first.splits_of_url.first
-          converted_url_2= output.first.final_output.first.splits_of_url.last
+          converted_url_1= output.first['splits_of_url'].first
+          converted_url_2= output.first['splits_of_url'].last
           File.exist?("/Users/manish/apps/cloudfactory/public#{converted_url_1}").should eql(true)
           File.exist?("/Users/manish/apps/cloudfactory/public#{converted_url_2}").should eql(true)
           line.stations.first.worker.class.should eql(CF::RobotWorker)

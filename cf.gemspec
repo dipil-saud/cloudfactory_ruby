@@ -34,17 +34,20 @@ Gem::Specification.new do |s|
   
   3. Generate your first assembly line...
   > cf line generate <line-title>
-
-  4. Edit the generated line.yml to design your perfect assembly line
+  
+  4. Go into generated line directory
+  > cd <line-title>
+  
+  5. Edit the generated line.yml to design your perfect assembly line
   See http://developers.cloudfactory.com/lines/yaml.html
-
-  5. Create your line in CloudFactory
+  
+  6. Create your line in CloudFactory
   > cf line create
 
-  6. Do a test production run in the sandbox first...
+  7. Do a test production run in the sandbox first...
   > cf production start TITLE -i=INPUT_DATA.CSV
 
-  7. Go live! Send your production run to real workers...
+  8. Go live! Send your production run to real workers...
   > cf production start TITLE -i=INPUT_DATA.CSV --live
   
  ------------------------------------------------------------------------------
@@ -59,15 +62,16 @@ Gem::Specification.new do |s|
 EOF
 
   s.add_dependency  "i18n"
-  s.add_dependency  "activesupport", '~> 3.0.3'
-  s.add_dependency  "hashie", "~> 1.0.0"
+  s.add_dependency  "activesupport", '~> 3.0'
+  s.add_dependency  "hashie", "~> 1.0"
   s.add_dependency  "rest-client"
   s.add_dependency  "json"
-  s.add_dependency  "thor", "~> 0.14.6"
+  s.add_dependency  "thor", "~> 0.14"
   s.add_dependency  "highline"
-  s.add_dependency  "httparty", "~> 0.7.8"
-  s.add_dependency  "terminal-table", "~> 1.4.2"
+  s.add_dependency  "httparty", "~> 0.7"
+  s.add_dependency  "terminal-table", "~> 1.4"
   s.add_dependency  "millisami-csv-hash"
+  s.add_dependency  "awesome_print"
   
   s.add_development_dependency 'ruby-debug19'
   s.add_development_dependency "aruba"

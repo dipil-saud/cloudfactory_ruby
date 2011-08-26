@@ -28,8 +28,8 @@ module CF
           # debugger
           output = run.final_output
           station_1_output = run.output(:station => 1)
-          station_1_output['description'].should eql(["this is description", "about company", "the company works on", "Ruby on Rails"])
-          output.first.final_output.first.append_description.should eql("this is description||about company||the company works on||Ruby on Rails")
+          station_1_output.first['description'].should eql(["this is description", "about company", "the company works on", "Ruby on Rails"])
+          output.first['append_description'].should eql("this is description||about company||the company works on||Ruby on Rails")
           line.stations.last.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(20)
           line.stations.first.worker.number.should eql(1)
@@ -72,8 +72,8 @@ module CF
           # debugger
           output = run.final_output
           station_1_output = run.output(:station => 1)
-          station_1_output['description'].should eql(["this is description", "about company", "the company works on", "Ruby on Rails"])
-          output.first.final_output.first.append_description.should eql("this is description||about company||the company works on||Ruby on Rails")
+          station_1_output.first['description'].should eql(["this is description", "about company", "the company works on", "Ruby on Rails"])
+          output.first['append_description'].should eql("this is description||about company||the company works on||Ruby on Rails")
           line.stations.last.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(20)
           line.stations.first.worker.number.should eql(1)

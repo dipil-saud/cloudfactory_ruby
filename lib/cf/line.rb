@@ -26,7 +26,7 @@ module CF
     attr_accessor :input_formats
     
     # Contains Error Messages
-    attr_accessor :errors
+    attr_accessor :errors, :output_formats
 
     # ==Initializes a new line
     # ==Usage of line.new("line_name")
@@ -56,6 +56,7 @@ module CF
     def stations stations = nil
       if stations
         type = stations.type
+        @batch_size = stations.batch_size
         @station_input_formats = stations.station_input_formats
         if type == "Improve" && self.stations.size < 1
           raise ImproveStationNotAllowed.new("You cannot add Improve Station as a first station of a line")
@@ -63,30 +64,53 @@ module CF
           if type == "Tournament"
             @jury_worker = stations.jury_worker
             @auto_judge = stations.auto_judge
-            request_tournament = 
-            {
-              :body => 
+            if @batch_size.nil?
+              request_tournament = 
               {
-                :api_key => CF.api_key,
-                :station => {:type => type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats}
+                :body => 
+                {
+                  :api_key => CF.api_key,
+                  :station => {:type => type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats}
+                }
               }
-            }
+            else
+              request_tournament = 
+              {
+                :body => 
+                {
+                  :api_key => CF.api_key,
+                  :station => {:type => type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats, :batch_size => @batch_size}
+                }
+              }
+            end
             resp = HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{CF.account_name}/#{self.title.downcase}/stations.json",request_tournament)
           else
-            request_general = 
-            {
-              :body => 
+            if @batch_size.nil?
+              request_general = 
               {
-                :api_key => CF.api_key,
-                :station => {:type => type, :input_formats => @station_input_formats}
+                :body => 
+                {
+                  :api_key => CF.api_key,
+                  :station => {:type => type, :input_formats => @station_input_formats}
+                }
               }
-            }
+            else
+              request_general = 
+              {
+                :body => 
+                {
+                  :api_key => CF.api_key,
+                  :station => {:type => type, :input_formats => @station_input_formats, :batch_size => @batch_size}
+                }
+              }
+            end
             resp = HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{CF.account_name}/#{self.title.downcase}/stations.json",request_general)
           end
           station = CF::Station.new()
           resp.to_hash.each_pair do |k,v|
             station.send("#{k}=",v) if station.respond_to?(k)
           end
+          station.batch_size = @batch_size
           station.line = self
           station.line_title = self.title
           if resp.response.code != "200"
@@ -162,6 +186,28 @@ module CF
       @input_formats << input_formats_value
     end
 
+    def output_formats output_format = nil
+      if output_format
+        settings = output_format.settings
+        request = 
+        {
+          :body => 
+          {
+            :api_key => CF.api_key,
+            :output_formats => settings
+          }
+        }
+        resp = HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{CF.account_name}/#{self.title.downcase}/output_format.json",request)
+        output_format.errors = resp.parsed_response['error']['message'] if resp.code != 200
+        self.output_formats = output_format
+      else
+        @output_formats
+      end
+    end
+    
+    def output_formats=(output_format)
+      @output_formats = output_format
+    end
     # ==Returns the content of a line by making an Api call
     # ===Usage Example:
     #   CF::Line.info(line)
@@ -173,6 +219,8 @@ module CF
       else
         resp = get("/lines/#{CF.account_name}/#{line.downcase}.json")
       end
+      @errors = resp.error.message if resp.code != 200
+      return resp
     end
 
     # ==Finds a line
@@ -183,16 +231,40 @@ module CF
     def self.find(line)
       if line.class == CF::Line
         resp = get("/lines/#{CF.account_name}/#{line.title.downcase}.json")
-      else
-        resp = get("/lines/#{CF.account_name}/#{line.downcase}.json")
+      elsif line.class == String
+        if line.split("/").count == 2
+          account = line.split("/").first
+          title = line.split("/").last
+          resp = get("/lines/#{account}/#{title.downcase}.json")
+        elsif line.split("/").count == 1
+          resp = get("/lines/#{CF.account_name}/#{line.downcase}.json")
+        end
       end
+      @errors = resp.error.message if resp.code != 200
+      return resp.to_hash
     end
     
     # ==Returns all the lines of an account
     # ===Syntax for all method is
     #   CF::Line.all
-    def self.all
-      get("/lines/#{CF.account_name}.json")
+    def self.all(options={})
+      page = options[:page].presence
+      if page
+        resp = get("/lines/#{CF.account_name}.json", :page => page)
+      else
+        resp = get("/lines/#{CF.account_name}.json")
+      end
+      @errors = resp.error.message if resp.code != 200
+      new_resp = []
+      if resp.lines
+        if resp.lines.count > 0
+          resp.lines.each do |l|
+            new_resp << l.to_hash
+          end
+        end
+      end
+      send_resp = {"lines" => new_resp, "total_pages" => resp.total_pages, "total_lines" => resp.total_lines}
+      return send_resp
     end
     
     # ==Returns all the stations of a line
@@ -250,37 +322,48 @@ module CF
       else
         resp = delete("/lines/#{CF.account_name}/#{title.downcase}.json")
       end
+      @errors = resp.error.message if resp.code != 200
+      return resp
     end
     
     def self.inspect(line_title)
       resp = get("/lines/#{CF.account_name}/#{line_title.downcase}/inspect.json")
-      send_resp = resp.to_hash
-      @line_input_formats = []
-      resp.input_formats.each do |l_i|
-        @line_input_formats << l_i.to_hash
-      end
-      send_resp.delete("input_formats")
-      send_resp.merge!("input_formats" => @line_input_formats)
-      @stations = []
-      resp.stations.each do |s|
-        @station_input_formats = []
-        s.input_formats.each do |i|
-          @station_input_formats << i.to_hash
+      @errors = resp.error.message if resp.code != 200
+      if resp.code == 200
+        send_resp = resp.to_hash
+        @line_input_formats = []
+        resp.input_formats.each do |l_i|
+          @line_input_formats << l_i.to_hash
         end
-        @station_form_fields = []
-        s.form_fields.each do |f|
-          @station_form_fields << f.to_hash
+        send_resp.delete("input_formats")
+        send_resp.merge!("input_formats" => @line_input_formats)
+        @stations = []
+      
+        resp.stations.each do |s|
+          @station_input_formats = []
+          s.input_formats.each do |i|
+            @station_input_formats << i.to_hash
+          end
+          @station_form_fields = []
+          @temp_station = s.to_hash
+          if !s.form_fields.nil?
+            s.form_fields.each do |f|
+              @station_form_fields << f.to_hash
+            end
+            @temp_station.delete("form_fields")
+            @temp_station.merge!("form_fields" => @station_form_fields)
+          end
+          @temp_station.delete("input_formats")
+          @temp_station.merge!("input_formats" => @station_input_formats)
+          @stations << @temp_station
         end
-        temp_station = s.to_hash
-        temp_station.delete("form_fields")
-        temp_station.merge!("form_fields" => @station_form_fields)
-        temp_station.delete("input_formats")
-        temp_station.merge!("input_formats" => @station_input_formats)
-        @stations << temp_station
+      
+        send_resp.delete("stations")
+        send_resp.merge!("stations" => @stations)
+        send_resp
+      else
+        resp
       end
-      send_resp.delete("stations")
-      send_resp.merge!("stations" => @stations)
-      return send_resp
     end
   end
 end

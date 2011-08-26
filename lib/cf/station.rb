@@ -25,7 +25,7 @@ module CF
     attr_accessor :auto_judge
     
     # Contains Error Message if any
-    attr_accessor :errors
+    attr_accessor :errors, :batch_size
 
     # ==Initializes a new station
     # ===Usage Example:
@@ -40,22 +40,42 @@ module CF
       @auto_judge = options[:auto_judge]
       @station_input_formats = options[:input_formats]
       @line_instance = options[:line]
-      request_general = 
-      {
-        :body => 
+      @batch_size = options[:batch_size]
+      if @batch_size.nil?
+        request_general = 
         {
-          :api_key => CF.api_key,
-          :station => {:type => @type, :input_formats => @station_input_formats}
+          :body => 
+          {
+            :api_key => CF.api_key,
+            :station => {:type => @type, :input_formats => @station_input_formats}
+          }
         }
-      }
-      request_tournament = 
-      {
-        :body => 
+        request_tournament = 
         {
-          :api_key => CF.api_key,
-          :station => {:type => @type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats}
+          :body => 
+          {
+            :api_key => CF.api_key,
+            :station => {:type => @type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats}
+          }
         }
-      }
+      else
+        request_general = 
+        {
+          :body => 
+          {
+            :api_key => CF.api_key,
+            :station => {:type => @type, :input_formats => @station_input_formats, :batch_size => @batch_size}
+          }
+        }
+        request_tournament = 
+        {
+          :body => 
+          {
+            :api_key => CF.api_key,
+            :station => {:type => @type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats, :batch_size => @batch_size}
+          }
+        }
+      end
       if @line_title
         if @type == "Improve"
           line = options[:line]
@@ -245,6 +265,7 @@ module CF
     # returns the station object
     def get
       resp = self.class.get("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}.json")
+      self.errors = resp.error.message if resp.code != 200
       return resp
     end
 
@@ -252,7 +273,9 @@ module CF
     # ===Usage example:
     #   @got_form = line.stations[0].get_form
     def get_form
-      self.class.get("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}/form.json")
+      resp = self.class.get("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}/form.json")
+      self.errors = resp.error.message if resp.code != 200
+      return resp
     end
 
     # ==Returns all the stations associated with a particular line
@@ -272,7 +295,9 @@ module CF
     #
     #   line.stations.first.delete
     def delete
-      self.class.delete("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}.json")
+      resp = self.class.delete("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}.json")
+      self.errors = resp.error.message if resp.code != 200
+      return resp
     end
     
     def to_s
