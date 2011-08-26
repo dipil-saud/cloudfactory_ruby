@@ -1,3 +1,7 @@
+## 0.2.0 (2011-08-26)
+
+* Line creation when doing production and if the line is not created is now removed. Fixed #283
+
 ## 0.1.22 (2011-08-26)
 
 * Fixed #317
