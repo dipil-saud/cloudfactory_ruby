@@ -528,7 +528,7 @@ module CF
         end
       end
       
-      xit "should throw errors for empty input while adding units" do
+      it "should throw errors for empty input while adding units" do
         VCR.use_cassette "run/block/adding_units_empty_errors", :record => :new_episodes do
         # WebMock.allow_net_connect!
           line = CF::Line.create("adding_units_error_1","Digitization") do |l|
@@ -545,8 +545,7 @@ module CF
           end
           run = CF::Run.create(line, "adding_units_error_run_1", [{"Company"=>"Apple,Inc","Website"=>"Apple.com"}])
           added_units = CF::Run.add_units(:run_title => "adding_units_error_run", :units => [])
-          added_units['error']['message'].should eql(["Extra Headers in file: [url]", "Insufficient Headers in file: [website]"])
-          run.title.should eql("adding_units_error_run_1")
+          added_units['error']['message'].should eql("Run document not found using selector: {:tenant_id=>BSON::ObjectId('4def16fa5511274d98000014'), :title=>\"adding_units_error_run\"}")
         end
       end
     end
