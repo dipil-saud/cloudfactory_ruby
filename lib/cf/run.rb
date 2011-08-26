@@ -85,7 +85,10 @@ module CF
     def self.create(line, title, file)
       Run.new(line, title, file)
     end
-
+    
+    # ==Adds units to an existing production Run
+    # ===Usage Example:
+    #   units = CF::Run.add_units({:run_title => "title", :file => "path_of_file"})
     def self.add_units(options={})
       units = options[:units].presence
       run_title = options[:run_title].presence
@@ -190,24 +193,33 @@ module CF
       return resp
     end
     
+    # ==Returns progress of the production run
+    # ===Usage Example:
+    #   progress = CF::Run.progress("run_title")
     def self.progress(run_title)
       get("/runs/#{CF.account_name}/#{run_title}/progress.json")
     end
     
-    def progress
+    def progress # :nodoc:
       self.class.get("/runs/#{CF.account_name}/#{self.title}/progress.json")
     end
     
+    # ==Returns progress details of the production run
+    # ===Usage Example:
+    #   progress = CF::Run.progress_details("run_title")
     def self.progress_details(run_title)
       resp = get("/runs/#{CF.account_name}/#{run_title}/details.json")
       return resp['progress_details']
     end
     
-    def progress_details
+    def progress_details # :nodoc:
       resp = self.class.get("/runs/#{CF.account_name}/#{self.title}/details.json")
       return resp['progress_details']
     end
     
+    # ==Returns all runs of a line
+    # ===Usage Example:
+    #   progress = CF::Run.all({:line_title => "line_title", :page => 1)
     def self.all(options={})
       page = options[:page].presence
       line_title = options[:line_title].presence
@@ -245,6 +257,9 @@ module CF
       end
     end
     
+    # ==Resumes the paused production run
+    # ===Usage Example:
+    #   resume_run = CF::Run.resume("run_title")
     def self.resume(run_title)
       resp = post("/runs/#{CF.account_name}/#{run_title}/resume.json")
       @errors = resp.error.message if resp.code != 200

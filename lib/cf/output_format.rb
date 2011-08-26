@@ -3,9 +3,19 @@ module CF
     require 'httparty'
     include Client
 
-    # type of the station, e.g. station = Station.new({:type => "Work"})
-    attr_accessor :settings, :errors, :line, :output_formats_settings
+    # output_format settings
+    attr_accessor :settings
     
+    # Contains error message if any
+    attr_accessor :errors
+    
+    # Line object for which output_format is specified
+    attr_accessor :line
+    
+    # ==Specifies output format for a line
+    # ===Usage Example:
+    #   output_format = CF::OutputFormat.new({:station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+    #   line.output_formats output_format
     def initialize(options={})
       if !options.blank?
         @settings = options
