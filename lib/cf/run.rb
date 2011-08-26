@@ -90,7 +90,7 @@ module CF
     # ===Usage Example:
     #   units = CF::Run.add_units({:run_title => "title", :file => "path_of_file"})
     def self.add_units(options={})
-      units = options[:units].presence
+      units = options[:units].nil? ? nil : options[:units]
       run_title = options[:run_title].presence
       file = options[:file].presence
       if units
