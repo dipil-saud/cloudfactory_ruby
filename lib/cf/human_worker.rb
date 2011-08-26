@@ -157,7 +157,7 @@ module CF
       self.skill_badges << resp.parsed_response['skill_badges']
     end
     
-    def to_s
+    def to_s # :nodoc:
       "{:id => => #{self.id}, :number => #{self.number}, :reward => #{self.reward}, :stat_badge => #{self.stat_badge},  :skill_badges => #{self.skill_badges}, :errors => #{self.errors}}"
     end
   end

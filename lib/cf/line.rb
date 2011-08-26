@@ -26,7 +26,10 @@ module CF
     attr_accessor :input_formats
     
     # Contains Error Messages
-    attr_accessor :errors, :output_formats
+    attr_accessor :errors
+    
+    # output_formats of the final output for a line
+    attr_accessor :output_formats
 
     # ==Initializes a new line
     # ==Usage of line.new("line_name")
@@ -186,6 +189,10 @@ module CF
       @input_formats << input_formats_value
     end
 
+    # ==Specifies output format for a line
+    # ===Usage Example:
+    #   output_format = CF::OutputFormat.new({:station_1 => [{:name => "First Name"}],:station_2 => [{:name => "Mobile", :except => true}]})
+    #   line.output_formats output_format
     def output_formats output_format = nil
       if output_format
         settings = output_format.settings
@@ -205,7 +212,7 @@ module CF
       end
     end
     
-    def output_formats=(output_format)
+    def output_formats=(output_format) # :nodoc:
       @output_formats = output_format
     end
     # ==Returns the content of a line by making an Api call
@@ -247,6 +254,8 @@ module CF
     # ==Returns all the lines of an account
     # ===Syntax for all method is
     #   CF::Line.all
+    # OR
+    #   CF:Line.all(:page => 1)
     def self.all(options={})
       page = options[:page].presence
       if page
@@ -326,6 +335,9 @@ module CF
       return resp
     end
     
+    # ==Return all the associated elements of a line
+    # ===Usage Example:
+    #   line = CF::Line.inspect("line_title")
     def self.inspect(line_title)
       resp = get("/lines/#{CF.account_name}/#{line_title.downcase}/inspect.json")
       @errors = resp.error.message if resp.code != 200

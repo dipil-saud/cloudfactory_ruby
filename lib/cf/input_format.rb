@@ -15,7 +15,10 @@ module CF
     attr_accessor :id
     
     # Title of Line with which input_format is associated
-    attr_accessor :line_title, :errors
+    attr_accessor :line_title
+    
+    # Contains error message if any
+    attr_accessor :errors
     
     # ==Initializes a new input_format
     # ===Usage Example:
@@ -82,7 +85,7 @@ module CF
       get("/lines/#{CF.account_name}/#{line.title.downcase}/input_formats.json")
     end
     
-    def to_s
+    def to_s # :nodoc:
       "{:id => #{self.id}, :name => #{self.name}, :required => #{self.required}, :valid_type => #{self.valid_type}, :errors => #{self.errors}}"
     end
   end

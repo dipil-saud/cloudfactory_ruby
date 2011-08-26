@@ -89,7 +89,7 @@ module CF
       RobotWorker.new(options)
     end
     
-    def to_s
+    def to_s # :nodoc:
       "{:number => #{self.number}, :reward => #{self.reward}, :type => #{self.type}, :settings => #{self.settings}, :errors => #{self.errors}}"
     end
   end

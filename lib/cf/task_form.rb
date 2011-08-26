@@ -106,7 +106,7 @@ module CF
       @form_fields << form_fields
     end
     
-    def to_s
+    def to_s # :nodoc:
       "{:title => #{self.title}, :instruction => #{self.instruction}, :form_fields => #{self.form_fields}, :errors => #{self.errors}}"
     end
   end
