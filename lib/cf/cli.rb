@@ -37,6 +37,7 @@ module Cf # :nodoc: all
     map "-v" => :version
     
     desc "login", "Setup the cloudfactory credentials"
+
     def login
       email = ask("Enter your email:")
       passwd = ask_password("Enter the password: ")
@@ -57,6 +58,17 @@ module Cf # :nodoc: all
         ::HighLine.new.ask(message) do |q| 
           q.echo = '*'
         end
+      end
+    end
+    
+    desc "whoami?", "to know what credential you are using"
+    def whoami?
+      if File.exists?(config_file)
+          yp = YAML::load(File.open(config_file,'r'))
+          say("\nAccount => #{yp[:account_name]}", :green)
+          say("Email => #{yp[:email]}\n", :green)
+      else
+          say("\nPlease login with cf login\n")
       end
     end
     
