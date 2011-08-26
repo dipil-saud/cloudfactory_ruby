@@ -27,11 +27,7 @@ module Cf # :nodoc: all
         line_title = line_yaml_dump['title'].parameterize        
         line = CF::Line.find(line_title)
         line = Hashie::Mash.new(line)
-        if line.error.blank?
-          line_title = line_title
-        else
-          say("#{line.error.message}", :red) and return
-        end
+        say("#{line.error.message}", :red) and return if line.error.present?
       elsif options[:line].present?
         line = CF::Line.find(options[:line])
         line = Hashie::Mash.new(line)
@@ -96,33 +92,12 @@ module Cf # :nodoc: all
         say("The input data file named #{input_data} is missing", :red) and return
       end
       
-
-      # before starting the run creation process, we need to make sure whether the line exists or not
-      # if not, then we got to first create the line and then do the production run
-      # else we just simply do the production run
-      
-      if line.error.blank?
-        say "Creating a production run with title #{run_title}", :green
-        run = CF::Run.create(line_title, run_title, input_data_file)
-        if run.errors.blank?
-          display_success_run(run)
-        else
-          say("Error: #{run.errors}", :red)
-        end
+      say "Creating a production run with title #{run_title}", :green
+      run = CF::Run.create(line_title, run_title, input_data_file)
+      if run.errors.blank?
+        display_success_run(run)
       else
-        if File.exist?("#{yaml_source}") and !line_title =~ /\w\/\w/
-          # first create line only if its in the valid line directory
-          say("Creating the line: #{line_title}", :green)
-          Cf::Line.new.create
-          # Now create a production run with the title run_title
-          say "Creating a production run with title #{run_title}", :green
-          run = CF::Run.create(CF::Line.info(line_title), run_title, input_data_file)
-          if run.errors.blank?
-            display_success_run(run)
-          else
-            say("Error: #{run.errors}", :red)
-          end
-        end
+        say("Error: #{run.errors}", :red)
       end
     end
 
