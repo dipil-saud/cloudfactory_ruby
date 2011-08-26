@@ -63,7 +63,7 @@ module CF
       instruction = CustomTaskForm.new(form)
     end
     
-    def to_s
+    def to_s # :nodoc:
       "{:title => #{self.title}, :instruction => #{self.instruction}, :raw_html => #{self.raw_html}, :raw_css => #{self.raw_css}, :raw_javascript => #{self.raw_javascript}, :errors => #{self.errors}}"
     end
   end

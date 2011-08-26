@@ -64,7 +64,7 @@ module CF
       end
     end
     
-    def to_s
+    def to_s # :nodoc:
       "{:id => => #{self.id}, :label => #{self.label}, :field_type => #{self.field_type}, :required => #{self.required}, :errors => #{self.errors}}"
     end
   end

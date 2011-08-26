@@ -25,7 +25,10 @@ module CF
     attr_accessor :auto_judge
     
     # Contains Error Message if any
-    attr_accessor :errors, :batch_size
+    attr_accessor :errors
+    
+    # batch_size attribute, required for specifing size of batch
+    attr_accessor :batch_size
 
     # ==Initializes a new station
     # ===Usage Example:
@@ -300,7 +303,7 @@ module CF
       return resp
     end
     
-    def to_s
+    def to_s # :nodoc:
       if self.type == "TournamentStation"
         "{:type => #{self.type}, :index => #{self.index}, :line_title => #{self.line_title}, :station_input_formats => #{self.station_input_formats}, :jury_worker => #{self.jury_worker}, auto_judge => #{self.auto_judge}, :errors => #{self.errors}}"
       else
