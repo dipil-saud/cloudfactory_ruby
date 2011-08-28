@@ -87,6 +87,7 @@ module Cf # :nodoc: all
             existing_runs = Cf::Production.new([],{'line' => line_title, 'all' => true})
             existing_runs.list
             
+            say("\n!!! Warning !!!\nDeleting this line will also delete all the existing production runs based on this line.\n", :yellow)
             delete_forcefully = agree("Do you still want to delete this line? [y/n] ")
             say("\n")
             if delete_forcefully
