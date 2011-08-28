@@ -83,24 +83,29 @@ module Cf # :nodoc: all
           resp_runs = CF::Run.all({:line_title => line_title})
 
           if resp_runs.has_key?("runs") && resp_runs['runs'].present?
-            say("!!! Warning !!!\nThe following are the existing production runs based on this line.", :cyan)
+            say("!!! Warning !!!\nThe following are the existing production runs based on this line.", :yellow)
             existing_runs = Cf::Production.new([],{'line' => line_title, 'all' => true})
             existing_runs.list
             
             delete_forcefully = agree("Do you still want to delete this line? [y/n] ")
+            say("\n")
             if delete_forcefully
-              CF::Line.destroy(line_title, :forced => true)
-              say("The line #{line_title} deleted successfully!", :yellow)
+              resp = CF::Line.destroy(line_title, :forced => true)
+              if resp.code != 200
+                say("Error: #{resp.error.message}\n", :red)
+              else
+                say("The line #{line_title} deleted successfully!\n", :yellow)
+              end
             else
-              say("Line deletion aborted!", :cyan)
+              say("Line deletion aborted!\n", :cyan)
             end
           else
             CF::Line.destroy(line_title)
-            say("The line #{line_title} deleted successfully!", :yellow)
+            say("The line #{line_title} deleted successfully!\n", :yellow)
           end
         end
       else
-        say("The line #{line_title} doesn't exist!", :yellow)
+        say("The line #{line_title} doesn't exist!\n", :yellow)
       end
     end
 
