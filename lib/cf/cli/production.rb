@@ -22,13 +22,7 @@ module Cf # :nodoc: all
       set_api_key
       CF.account_name = CF::Account.info.name
       
-      if File.exist?("#{yaml_source}")
-        line_yaml_dump = YAML::load(File.read(yaml_source).strip)
-        line_title = line_yaml_dump['title'].parameterize        
-        line = CF::Line.find(line_title)
-        line = Hashie::Mash.new(line)
-        say("#{line.error.message}", :red) and return if line.error.present?
-      elsif options[:line].present?
+      if options[:line].present?
         line = CF::Line.find(options[:line])
         line = Hashie::Mash.new(line)
         if line.error.blank?
@@ -36,6 +30,12 @@ module Cf # :nodoc: all
         else
           say("#{line.error.message}", :red) and return
         end
+      elsif File.exist?("#{yaml_source}")
+        line_yaml_dump = YAML::load(File.read(yaml_source).strip)
+        line_title = line_yaml_dump['title'].parameterize        
+        line = CF::Line.find(line_title)
+        line = Hashie::Mash.new(line)
+        say("#{line.error.message}", :red) and return if line.error.present? 
       else
         say("Looks like you're not in the Line directory or did not provide the line title to use the line", :red) and return
       end
@@ -161,10 +161,10 @@ module Cf # :nodoc: all
       runs = resp_runs['runs'].presence
       runs.sort! {|a, b| a['title'] <=> b['title'] }
       runs_table = table do |t|
-        t.headings = ["Run Title", 'URL']
+        t.headings = ["Run Title", 'URL', 'Status']
         runs.each do |run|
           run = Hashie::Mash.new(run)
-          t << [run.title, "http://#{CF.account_name}.cloudfactory.com/runs/#{CF.account_name}/#{run.title}"]
+          t << [run.title, "http://#{CF.account_name}.cloudfactory.com/runs/#{CF.account_name}/#{run.title}", run.status]
         end
       end
       say("\n")
