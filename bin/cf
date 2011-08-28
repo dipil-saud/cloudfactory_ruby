@@ -13,6 +13,10 @@ begin
   Cf::CLI.start
 rescue ArgumentError
   $stderr.puts "\n\tError during processing: #{$!.message}\n\n"
-rescue Psych::SyntaxError
-  $stderr.puts "\n\tError during processing: #{$!.message}\n\n"
+rescue Exception => exec
+  if (defined?(Syck::SyntaxError) && exec.is_a?(Syck::SyntaxError)) || (defined?(Psych::SyntaxError) && exec.is_a?(Psych::SyntaxError))
+    $stderr.puts "\n\tError during processing: #{$!.message}\n\n"
+  else
+    raise exec
+  end
 end
