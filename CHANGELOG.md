@@ -1,3 +1,11 @@
+## 0.2.2 (2011-08-29)
+
+* Add a new command in CLI, cf whoami to show the current logged in credentials
+* Psych::SyntaxError and Syck::SyntaxError exceptions caught once again to show some intuitive error instead of scary backtrace
+* Tested when adding units for blank/no data
+* Output format bug fixed in GEM
+* Fixed miscellaneous bugs 
+
 ## 0.2.1 (2011-08-26)
 
 * Fixed the bug of creating multiple output formats for a line. Issue #352
