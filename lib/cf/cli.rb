@@ -61,8 +61,8 @@ module Cf # :nodoc: all
       end
     end
     
-    desc "whoami?", "to know what credential you are using"
-    def whoami?
+    desc "whoami", "to know what credential you are using"
+    def whoami
       if File.exists?(config_file)
           yp = YAML::load(File.open(config_file,'r'))
           say("\nAccount => #{yp[:account_name]}", :green)
