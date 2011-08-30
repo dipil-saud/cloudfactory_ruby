@@ -1,3 +1,9 @@
+## 0.2.3 (2011-08-30)
+
+* Add a new command in CLI, cf production delete --run-title=your-run-title to delete the production run
+* The same is added in Gem
+* If no valid_type is sent in input_formats, it will be created. Before, it was the mandatory.
+
 ## 0.2.2 (2011-08-29)
 
 * Add a new command in CLI, cf whoami to show the current logged in credentials
