@@ -85,6 +85,37 @@ describe CF::FormField do
       end
     end
   
+    it "in block DSL way without valid_type and some with valid_type" do
+      # WebMock.allow_net_connect!
+      VCR.use_cassette "form-fields/block/create-valid_type", :record => :new_episodes do
+        line = CF::Line.create("form_fields_valid_type", "Digitization") do
+          CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
+          CF::Station.create({:line => self, :type => "work"}) do |station|
+            CF::HumanWorker.new({:station => station, :number => 1, :reward => 20})
+            CF::TaskForm.create({:station => station, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+              CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+              CF::FormField.new({:form => i, :label => "email", :field_type => "short_answer", :valid_type => "email",  :required => "true"})
+            end
+          end
+        end
+        line.title.should eq("form_fields_valid_type")
+        line.department_name.should eq("Digitization")
+        line.input_formats.first.name.should eql("image_url")
+        line.stations.first.type.should eq("WorkStation")
+        line.stations.first.worker.number.should eq(1)
+        line.stations.first.form.instruction.should eq("Describe")
+        line.stations.first.form.form_fields[0].label.should eq("First Name")
+        line.stations.first.form.form_fields[0].field_type.should eq("short_answer")
+        line.stations.first.form.form_fields[0].required.should eq(true)
+        line.stations.first.form.form_fields[0].form_field_params.should eql({:label => "First Name", :field_type => "short_answer", :required => "true"})
+        line.stations.first.form.form_fields[1].label.should eq("email")
+        line.stations.first.form.form_fields[1].field_type.should eq("short_answer")
+        line.stations.first.form.form_fields[1].required.should eq(true)
+        line.stations.first.form.form_fields[1].valid_type.should eq("email")
+        line.stations.first.form.form_fields[1].form_field_params.should eql({:label => "email", :field_type => "short_answer", :valid_type => "email", :required => "true"})
+      end
+    end
+    
     it "in block DSL way with invalid form_field data" do
       # WebMock.allow_net_connect!
       VCR.use_cassette "form-fields/block/create-without-label", :record => :new_episodes do
