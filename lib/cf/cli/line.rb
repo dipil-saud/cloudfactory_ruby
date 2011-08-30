@@ -174,15 +174,22 @@ module Cf # :nodoc: all
         # Creation of InputFormat from yaml file
         input_formats = line_dump['input_formats']
         input_formats.each_with_index do |input_format, index|
-          
-          attrs = {
-            :name => input_format['name'],
-            :required => input_format['required'],
-            :valid_type => input_format['valid_type']
-          }
-          input_format_for_line = CF::InputFormat.new(attrs)
+          if input_format['valid_type']
+            @attrs = {
+              :name => input_format['name'],
+              :required => input_format['required'],
+              :valid_type => input_format['valid_type']
+            }
+          elsif input_format['valid_type'].nil?
+            @attrs = {
+              :name => input_format['name'],
+              :required => input_format['required'],
+              :valid_type => input_format['valid_type']
+            }
+          end
+          input_format_for_line = CF::InputFormat.new(@attrs)
           input_format = line.input_formats input_format_for_line
-          say_status "input", "#{attrs[:name]}"
+          say_status "input", "#{@attrs[:name]}"
           display_error(line_title, "#{line.input_formats[index].errors}") if line.input_formats[index].errors.present?
         end
 
