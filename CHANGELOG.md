@@ -1,3 +1,7 @@
+## 0.2.4 (2011-08-31)
+
+* valid_type: text removed from the sample line generated line.yml file
+
 ## 0.2.3 (2011-08-30)
 
 * Add a new command in CLI, cf production delete --run-title=your-run-title to delete the production run
