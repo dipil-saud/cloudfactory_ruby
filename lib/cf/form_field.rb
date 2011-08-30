@@ -7,7 +7,7 @@ module CF
     attr_accessor :label
 
     # field_type for "form" object, e.g. :field_type => "SA"
-    attr_accessor :field_type
+    attr_accessor :field_type, :valid_type
 
     # required boolean either true or false, e.g. :required => "true" & if false then you don't need to mention  
     attr_accessor :required
@@ -37,6 +37,7 @@ module CF
       @form  = options[:form]
       @label        = options[:label]
       @field_type   = options[:field_type]
+      @valid_type   = options[:valid_type]
       @required     = options[:required]
       
       if !@form.nil?

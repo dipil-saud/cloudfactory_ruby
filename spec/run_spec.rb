@@ -549,5 +549,38 @@ module CF
         end
       end
     end
+    
+    context "Delete Run" do
+      it "should call destroy method of run to delete a created run" do
+        VCR.use_cassette "run/block/delete_run", :record => :new_episodes do
+        # WebMock.allow_net_connect!
+          line = CF::Line.create("delete_run","Digitization") do |l|
+            CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+            CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
+            CF::Station.create({:line => l, :type => "work"}) do |s|
+              CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+              CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
+                CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
+                CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
+                CF::FormField.new({:form => i, :label => "Last Name", :field_type => "short_answer", :required => "true"})
+              end
+            end
+          end
+          run = CF::Run.create(line, "delete_run_run", [{"Company"=>"Apple,Inc","Website"=>"Apple.com"}])
+          deleted_resp = CF::Run.destroy("delete_run_run")
+          deleted_resp.code.should eql(200)
+          deleted_resp.line['title'].should eql("delete_run")
+          deleted_resp.title.should eql("delete_run_run")
+        end
+      end
+    
+      it "should throw error message while deleting uncreated Run" do
+        VCR.use_cassette "run/block/delete_run_error", :record => :new_episodes do
+          delete = CF::Run.destroy("norun")
+          delete.code.should_not eql(200)
+          delete.error.message.should eql("Run document not found using selector: {:tenant_id=>BSON::ObjectId('4def16fa5511274d98000014'), :title=>\"norun\"}")
+        end
+      end
+    end
   end
 end

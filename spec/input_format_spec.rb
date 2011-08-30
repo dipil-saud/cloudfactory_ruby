@@ -50,6 +50,18 @@ describe CF::InputFormat do
         line.input_formats[1].name.should eq("image")
       end
     end
+    
+    it "in block DSL way within line without valid_type" do
+      # WebMock.allow_net_connect!
+      VCR.use_cassette "input_formats/block/create-input-headers-of-line-1", :record => :new_episodes do 
+        line = CF::Line.create("input_format_without_valid_type","Digitization") do |l|
+          CF::InputFormat.new({:line => l, :name => "image_url", :required => true, :valid_type => "url"})
+          CF::InputFormat.new({:line => l, :name => "image", :required => true})
+        end
+        line.input_formats[0].name.should eq("image_url")
+        line.input_formats[1].name.should eq("image")
+      end
+    end
 
     it "in block DSL way within station" do
       # WebMock.allow_net_connect!

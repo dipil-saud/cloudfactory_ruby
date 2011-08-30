@@ -265,5 +265,14 @@ module CF
       @errors = resp.error.message if resp.code != 200
       return resp
     end
+  
+    # ==Deletes the production run
+    # ===Usage Example:
+    #   delete_run = CF::Run.destroy("run_title")
+    def self.destroy(run_title)
+      resp = delete("/runs/#{CF.account_name}/#{run_title}.json")
+      @errors = resp.error.message if resp.code != 200
+      return resp
+    end
   end
 end
