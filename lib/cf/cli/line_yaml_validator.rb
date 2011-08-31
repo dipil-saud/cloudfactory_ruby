@@ -69,7 +69,8 @@ module Cf
                       errors << "Worker type is invalid in Block station #{i+1}!" if worker_type.split("_").last != "robot"
                       if worker_type.split("_").last == "robot"
                         settings = worker['settings']
-                        errors << "Settings for the robot worker is missingin Block station #{i+1}!" if settings.nil?
+                        errors << "Settings for the robot worker is missing in Block station #{i+1}!" if settings.nil?
+                        errors << "Settings for the robot worker is invalid in Block station #{i+1}!" if settings.class != Hash
                       end
                     elsif worker_type == "human" 
                       # Checking number of workers if worker_type == "human"
