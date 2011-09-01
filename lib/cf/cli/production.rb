@@ -42,12 +42,12 @@ module Cf # :nodoc: all
 
       if title.nil?
         if line_title =~  /\w\/\w/
-          run_title       = "#{line_title.split("/").last}-#{Time.new.strftime('%y%b%e-%H%M%S')}".downcase
+          run_title       = "#{line_title.split("/").last}-#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
         else
-          run_title       = "#{line_title}-#{Time.new.strftime('%y%b%e-%H%M%S')}".downcase
+          run_title       = "#{line_title}-#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
         end
       else
-        run_title       = "#{title.parameterize}-#{Time.new.strftime('%y%b%e-%H%M%S')}".downcase
+        run_title       = "#{title.parameterize}-#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
       end
 
       input_data = options[:input_data].presence
