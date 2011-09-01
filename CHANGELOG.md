@@ -1,3 +1,9 @@
+## 0.2.5 (2011-09-01)
+
+* Broken url after doing production run on date 01 - 09 day. Fixed
+* Public true/false value is always set to true when line created via CLI. Fixed
+* Yaml validator modified for worker's setting attributes, if worker_type is robot.
+
 ## 0.2.4 (2011-08-31)
 
 * valid_type: text removed from the sample line generated line.yml file
