@@ -38,15 +38,19 @@ module CF
       @line               = options[:line]
       @name              = options[:name]
       @required           = options[:required]
-      @valid_type  = options[:valid_type]
+      @valid_type  = options[:valid_type].nil? ? nil : options[:valid_type]
       if !@station.nil? or !@line.nil?
         line_title = @station.nil? ? @line.title : @station.line_title
-        resp = self.class.post("/lines/#{CF.account_name}/#{@line.title.downcase}/input_formats.json", :input_format => {:name => @name, :required => @required, :valid_type => @valid_type})
-        resp.to_hash.each_pair do |k,v|
+        if @valid_type
+          @resp = self.class.post("/lines/#{CF.account_name}/#{@line.title.downcase}/input_formats.json", :input_format => {:name => @name, :required => @required, :valid_type => @valid_type})
+        else
+          @resp = self.class.post("/lines/#{CF.account_name}/#{@line.title.downcase}/input_formats.json", :input_format => {:name => @name, :required => @required})
+        end
+        @resp.to_hash.each_pair do |k,v|
           self.send("#{k}=",v) if self.respond_to?(k)
         end
-        if resp.code != 200
-          self.errors = resp.error.message
+        if @resp.code != 200
+          self.errors = @resp.error.message
         end
         @line_title = line_title
         if !@station.nil? && @station.except.nil? && @station.extra.nil?

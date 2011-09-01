@@ -3,13 +3,13 @@ require 'thor/group'
 module Cf # :nodoc: all
   class Production < Thor # :nodoc: all
     include Cf::Config
-    
+
     no_tasks do
       def extract_name(file_path)
         Pathname.new(file_path).basename.to_s
       end
     end
-    
+
     desc "production start <run-title>", "creates a production run with input data file at input/<run-title>.csv"
     method_option :input_data, :type => :string, :aliases => "-i", :desc => "the name of the input data file"
     method_option :live, :type => :boolean, :default => false, :desc => "specifies sandbox or live mode"
@@ -21,7 +21,6 @@ module Cf # :nodoc: all
       set_target_uri(options[:live])
       set_api_key
       CF.account_name = CF::Account.info.name
-      
       if options[:line].present?
         line = CF::Line.find(options[:line])
         line = Hashie::Mash.new(line)
@@ -42,16 +41,16 @@ module Cf # :nodoc: all
 
       if title.nil?
         if line_title =~  /\w\/\w/
-          run_title       = "#{line_title.split("/").last}-#{Time.new.strftime('%y%b%e-%H%M%S')}".downcase
+          run_title       = "#{line_title.split("/").last}-#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
         else
-          run_title       = "#{line_title}-#{Time.new.strftime('%y%b%e-%H%M%S')}".downcase
+          run_title       = "#{line_title}-#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
         end
       else
-        run_title       = "#{title.parameterize}-#{Time.new.strftime('%y%b%e-%H%M%S')}".downcase
+        run_title       = "#{title.parameterize}-#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
       end
 
       input_data = options[:input_data].presence
-      
+
       if input_data =~ /^\// #checking absolute input data path
         input_data_file = input_data
       else
@@ -87,11 +86,11 @@ module Cf # :nodoc: all
           input_data_file = "#{Dir.pwd}/#{input_data}"
         end
       end
-      
+
       unless File.exist?(input_data_file)
         say("The input data file named #{input_data} is missing", :red) and return
       end
-      
+
       say "Creating a production run with title #{run_title}", :green
       run = CF::Run.create(line_title, run_title, input_data_file)
       if run.errors.blank?
@@ -107,7 +106,7 @@ module Cf # :nodoc: all
         say("View your production at:\n\thttp://#{CF.account_name}.#{CF.api_url.split("/")[-2]}/runs/#{CF.account_name}/#{run.title}/workerpool_preview\n", :green)
       end
     end
-    
+
     desc "production list", "list the production runs"
     method_option :line, :type => :string, :aliases => "-l", :desc => "the title of the line, if the line title is not given, it will show all the production runs under your account"
     method_option :page, :type => :numeric, :aliases => "-p", :desc => "page number"
@@ -127,7 +126,7 @@ module Cf # :nodoc: all
           param.merge!({:page => "all"})
           current_page = 1
         end
-        
+
         if page = options['page'].presence
           param.merge!({:page => page})
           current_page = page
@@ -146,15 +145,15 @@ module Cf # :nodoc: all
       end
 
       resp_runs = CF::Run.all(param)
-      
+
       if resp_runs.has_key?('error')
         say("#{resp_runs['error']}", :red) and exit(1)
       end
-      
+
       if resp_runs.has_key?("runs") && resp_runs['runs'].blank?
         say("\nRun list is empty.\n", :yellow) and return
       end
-      
+
       if resp_runs['total_pages']
         say("\nShowing page #{current_page} of #{resp_runs['total_pages']} (Total runs: #{resp_runs['total_runs']})")
       end
@@ -174,7 +173,7 @@ module Cf # :nodoc: all
         say("No production run for line #{line_title}", :yellow)
       end
     end
-    
+
     desc "production resume", "resume a paused production run"
     method_option :run_title, :type => :string, :required => true, :aliases => "-r", :desc => "the title of the run to resume"
     def resume
@@ -191,18 +190,17 @@ module Cf # :nodoc: all
       say("Run with title \"#{result.title}\" is resumed!", :green)
       # end
     end   
-    
+
     desc "production add_units", "add units to already existing production run"
     method_option :run_title, :type => :string, :required => true, :aliases => "-t", :desc => "the title of the run to resume"
     method_option :input_data, :type => :string, :required => true, :aliases => "-i", :desc => "the path of the input data file"
-    
     def add_units
       set_target_uri(false)
       set_api_key
       CF.account_name = CF::Account.info.name
       run_title = options[:run_title].parameterize
       input_data = options[:input_data].presence
-      
+
       if input_data =~ /^\// #checking absolute input data path
         input_data_file = input_data
       else
@@ -215,10 +213,22 @@ module Cf # :nodoc: all
       if units['error'].present?
         say("Error: #{units['error']['message']}", :red) and exit(1)
       end
-
-      # if result.status == "resumed"
       say("\"#{units['successfull']}\"!", :green)
-      # end
+    end 
+
+    desc "production delete", "Deletes created Production Run"
+    method_option :run_title, :type => :string, :required => true, :aliases => "-t", :desc => "the title of the run to resume"
+    def delete
+      set_target_uri(false)
+      set_api_key
+      CF.account_name = CF::Account.info.name
+      run_title = options[:run_title].parameterize
+      
+      deleted_run = CF::Run.destroy(run_title)
+      if deleted_run.error.present?
+        say("Error: #{deleted_run.error.message}", :red) and exit(1)
+      end
+      say("Run Deleted Successfully entitled: \"#{deleted_run.title}\"!", :green)
     end 
   end
 end

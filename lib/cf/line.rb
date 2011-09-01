@@ -40,7 +40,7 @@ module CF
       @stations =[]
       @title = title
       @department_name = department_name
-      @public = options[:public].present? ? options[:public] : true
+      @public = options[:public].nil? ? true : options[:public]
       @description = options[:description]
       resp = self.class.post("/lines/#{CF.account_name}.json", {:line => {:title => title, :department_name => department_name, :public => @public, :description => @description}})
       if resp.code != 200
@@ -169,14 +169,18 @@ module CF
       if input_formats_value
         name = input_formats_value.name
         required = input_formats_value.required
-        valid_type = input_formats_value.valid_type
-        resp = CF::InputFormat.post("/lines/#{CF.account_name}/#{self.title.downcase}/input_formats.json", :input_format => {:name => name, :required => required, :valid_type => valid_type})
+        valid_type = input_formats_value.valid_type.nil? ? nil : input_formats_value.valid_type
+        if valid_type
+          @resp = CF::InputFormat.post("/lines/#{CF.account_name}/#{self.title.downcase}/input_formats.json", :input_format => {:name => name, :required => required, :valid_type => valid_type})
+        elsif valid_type.nil?
+          @resp = CF::InputFormat.post("/lines/#{CF.account_name}/#{self.title.downcase}/input_formats.json", :input_format => {:name => name, :required => required})
+        end
         input_format = CF::InputFormat.new()
-        resp.each_pair do |k,v|
+        @resp.each_pair do |k,v|
           input_format.send("#{k}=",v) if input_format.respond_to?(k)
         end
-        if resp.code != 200
-          input_format.errors = resp.error.message
+        if @resp.code != 200
+          input_format.errors = @resp.error.message
         end
         @input_formats << input_format
       else

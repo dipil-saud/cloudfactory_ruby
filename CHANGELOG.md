@@ -1,3 +1,19 @@
+## 0.2.5 (2011-09-01)
+
+* Broken url after doing production run on date 01 - 09 day. Fixed
+* Public true/false value is always set to true when line created via CLI. Fixed
+* Yaml validator modified for worker's setting attributes, if worker_type is robot.
+
+## 0.2.4 (2011-08-31)
+
+* valid_type: text removed from the sample line generated line.yml file
+
+## 0.2.3 (2011-08-30)
+
+* Add a new command in CLI, cf production delete --run-title=your-run-title to delete the production run
+* The same is added in Gem
+* If no valid_type is sent in input_formats, it will be created. Before, it was the mandatory.
+
 ## 0.2.2 (2011-08-29)
 
 * Add a new command in CLI, cf whoami to show the current logged in credentials
