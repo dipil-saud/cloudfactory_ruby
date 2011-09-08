@@ -203,7 +203,8 @@ module Cf # :nodoc: all
           if type == "tournament"
             jury_worker = station_file['station']['jury_worker']
             auto_judge = station_file['station']['auto_judge']
-            station_params = {:line => line, :type => type, :jury_worker => jury_worker, :auto_judge => auto_judge, :input_formats => input_formats_for_station, :batch_size => batch_size}
+            acceptance_ratio = station_file['station']['acceptance_ratio']
+            station_params = {:line => line, :type => type, :jury_worker => jury_worker, :auto_judge => auto_judge, :input_formats => input_formats_for_station, :batch_size => batch_size, :acceptance_ratio => acceptance_ratio}
           else
             station_params = {:line => line, :type => type, :input_formats => input_formats_for_station, :batch_size => batch_size}
           end

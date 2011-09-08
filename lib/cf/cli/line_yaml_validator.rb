@@ -51,6 +51,8 @@ module Cf
                     errors << "Reward for Jury worker is missing in block of Tournament Station #{i+1}!" if reward.nil?
                     errors << "Reward Must be greater than 0 in Block station #{i+1}!" if !reward.nil? && reward < 1
                   end
+                  acceptance_ratio = station['station']['acceptance_ratio']
+                  errors << "Acceptance ratio must lie between 0 and 1 in Block station #{i+1}!" if !acceptance_ratio.nil? && acceptance_ratio > 1 or acceptance_ratio < 0
                 end
                 # Checking Worker
                 worker = station['station']['worker']

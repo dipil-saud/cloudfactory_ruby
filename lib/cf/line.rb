@@ -67,6 +67,7 @@ module CF
           if type == "Tournament"
             @jury_worker = stations.jury_worker
             @auto_judge = stations.auto_judge
+            @acceptance_ratio = stations.acceptance_ratio
             if @batch_size.nil?
               request_tournament = 
               {
@@ -77,14 +78,25 @@ module CF
                 }
               }
             else
-              request_tournament = 
-              {
-                :body => 
+              if @acceptance_ratio.nil?
+                request_tournament = 
                 {
-                  :api_key => CF.api_key,
-                  :station => {:type => type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats, :batch_size => @batch_size}
+                  :body => 
+                  {
+                    :api_key => CF.api_key,
+                    :station => {:type => type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats, :batch_size => @batch_size}
+                  }
                 }
-              }
+              else
+                request_tournament = 
+                {
+                  :body => 
+                  {
+                    :api_key => CF.api_key,
+                    :station => {:type => type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats, :batch_size => @batch_size, :acceptance_ratio => @acceptance_ratio}
+                  }
+                }
+              end
             end
             resp = HTTParty.post("#{CF.api_url}#{CF.api_version}/lines/#{CF.account_name}/#{self.title.downcase}/stations.json",request_tournament)
           else

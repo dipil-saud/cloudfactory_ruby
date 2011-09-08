@@ -44,6 +44,7 @@ module CF
       @station_input_formats = options[:input_formats]
       @line_instance = options[:line]
       @batch_size = options[:batch_size]
+      @acceptance_ratio = options[:acceptance_ratio]
       if @batch_size.nil?
         request_general = 
         {
@@ -53,14 +54,25 @@ module CF
             :station => {:type => @type, :input_formats => @station_input_formats}
           }
         }
-        request_tournament = 
-        {
-          :body => 
+        if @acceptance_ratio.nil?
+          request_tournament = 
           {
-            :api_key => CF.api_key,
-            :station => {:type => @type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats}
+            :body => 
+            {
+              :api_key => CF.api_key,
+              :station => {:type => @type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats}
+            }
           }
-        }
+        else
+          request_tournament = 
+          {
+            :body => 
+            {
+              :api_key => CF.api_key,
+              :station => {:type => @type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats, :acceptance_ratio => @acceptance_ratio}
+            }
+          }
+        end
       else
         request_general = 
         {
@@ -70,14 +82,25 @@ module CF
             :station => {:type => @type, :input_formats => @station_input_formats, :batch_size => @batch_size}
           }
         }
-        request_tournament = 
-        {
-          :body => 
+        if @acceptance_ratio.nil?
+          request_tournament = 
           {
-            :api_key => CF.api_key,
-            :station => {:type => @type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats, :batch_size => @batch_size}
+            :body => 
+            {
+              :api_key => CF.api_key,
+              :station => {:type => @type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats, :batch_size => @batch_size}
+            }
           }
-        }
+        else
+          request_tournament = 
+          {
+            :body => 
+            {
+              :api_key => CF.api_key,
+              :station => {:type => @type, :jury_worker => @jury_worker, :auto_judge => @auto_judge, :input_formats => @station_input_formats, :batch_size => @batch_size, :acceptance_ratio => @acceptance_ratio}
+            }
+          }
+        end
       end
       if @line_title
         if @type == "Improve"
