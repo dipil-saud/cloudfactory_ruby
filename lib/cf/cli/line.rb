@@ -345,10 +345,10 @@ module Cf # :nodoc: all
       end
     }
 
-    desc "line inspect", "list the details of the line"
+    desc "line details", "list the details of the line"
     method_option :line, :type => :string, :aliases => "-l", :desc => "specify the line-title to inspect"
     # method_option :verbose, :type => :boolean, :aliases => "-v", :desc => "gives the detailed structure of the line"
-    def inspect
+    def details 
       if options['line'].blank?
         line_source = Dir.pwd
         yaml_source = "#{line_source}/line.yml"
