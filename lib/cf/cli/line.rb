@@ -113,7 +113,26 @@ module Cf # :nodoc: all
     no_tasks {
       # method to call with line title to delete the line if validation fails during the creation of line
       def rollback(line_title)
-        CF::Line.destroy(line_title)
+        deleted_resp = CF::Line.destroy(line_title)
+        if !deleted_resp.error.nil?
+          if deleted_resp.error.message == "Cannot delete line. You have production runs using this line. Pass force option to enforce deletion."
+            say("!!! Warning !!!\nThe following are the existing production runs based on this line.", :yellow)
+            existing_runs = Cf::Production.new([],{'line' => line_title, 'all' => true})
+            existing_runs.list
+          
+            say("\n!!! Warning !!!\nDeleting this line will also delete all the existing production runs based on this line.\n", :yellow)
+            delete_forcefully = agree("Do you still want to delete this line? [y/n] ")
+            say("\n")
+            if delete_forcefully
+              resp = CF::Line.destroy(line_title, :forced => true)
+              if resp.code != 200
+                say("Error: #{resp.error.message}\n", :red)
+              end
+            else
+              say("Line deletion aborted!\n", :cyan)
+            end
+          end
+        end
       end
       
       def display_error(line_title, error_message)
