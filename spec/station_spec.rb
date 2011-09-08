@@ -19,7 +19,7 @@ describe CF::Station do
         line = CF::Line.create("igitizeard", "Digitization") do
           CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work"}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 2, :reward => 20})
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
             CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
               CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
               CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
@@ -28,7 +28,7 @@ describe CF::Station do
           end
         end
         line.stations.first.type.should eq("WorkStation")
-        line.stations.first.worker.number.should eql(2)
+        line.stations.first.worker.number.should eql(1)
         line.stations.first.worker.reward.should eql(20)
         line.stations.first.form.title.should eq("Enter text from a business card image")
         line.stations.first.form.instruction.should eq("Describe")
@@ -44,7 +44,7 @@ describe CF::Station do
         line = CF::Line.create("Digitizrd", "Digitization") do
           CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work"}) do
-            CF::HumanWorker.new({:station => self, :number => 2, :reward => 20})
+            CF::HumanWorker.new({:station => self, :number => 1, :reward => 20})
             CF::TaskForm.create({:station => self, :title => "Enter text from a business card image", :instruction => "Describe"}) do
               CF::FormField.new({:form => self, :label => "First Name", :field_type => "short_answer", :required => "true"})
               CF::FormField.new({:form => self, :label => "Middle Name", :field_type => "short_answer"})
@@ -53,7 +53,7 @@ describe CF::Station do
           end
         end
         line.stations.first.type.should eq("WorkStation")
-        line.stations.first.worker.number.should eql(2)
+        line.stations.first.worker.number.should eql(1)
         line.stations.first.worker.reward.should eql(20)
         line.stations.first.form.title.should eq("Enter text from a business card image")
         line.stations.first.form.instruction.should eq("Describe")
@@ -78,8 +78,8 @@ describe CF::Station do
           end
         end
         line.stations.first.type.should eq("TournamentStation")
-        line.stations.first.jury_worker.should eql({:max_judges => 10,:reward=>5})
-        line.stations.first.auto_judge.should eql({:enabled => true})
+        line.stations.first.jury_worker.should eql({"max_judges"=>10, "confidence_level"=>0.65, "tournament_restarts"=>0, "number"=>2})
+        line.stations.first.auto_judge.should eql({"enabled"=>true, "finalize_percentage"=>51})
         line.stations.first.worker.number.should eql(3)
         line.stations.first.worker.reward.should eql(20)
         line.stations.first.form.title.should eq("Enter text from a business card image")
@@ -106,7 +106,7 @@ describe CF::Station do
         line = CF::Line.create("Display_station", "Digitization") do
           CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work"}) do |station|
-            CF::HumanWorker.new({:station => station, :number => 2, :reward => 20})
+            CF::HumanWorker.new({:station => station, :number => 1, :reward => 20})
           end
         end
         line.stations.first.to_s.should eql("{:type => WorkStation, :index => 1, :line_title => Display_station, :station_input_formats => , :errors => }")
@@ -122,7 +122,7 @@ describe CF::Station do
             CF::HumanWorker.new({:station => s, :number => 2, :reward => 20})
           end
         end
-        line.stations.first.to_s.should eql("{:type => TournamentStation, :index => 1, :line_title => Display_station_tournament, :station_input_formats => , :jury_worker => {:max_judges=>10, :reward=>5}, auto_judge => {:enabled=>true}, :errors => }")
+        line.stations.first.to_s.should eql("{:type => TournamentStation, :index => 1, :line_title => Display_station_tournament, :station_input_formats => , :jury_worker => {\"max_judges\"=>10, \"confidence_level\"=>0.65, \"tournament_restarts\"=>0, \"number\"=>2}, auto_judge => {\"enabled\"=>true, \"finalize_percentage\"=>51}, :errors => }")
       end
     end
   end
@@ -160,7 +160,7 @@ describe CF::Station do
       # WebMock.allow_net_connect!
       VCR.use_cassette "stations/block/multiple-station-adding-input-format", :record => :new_episodes do
         line = CF::Line.create("Company-info-214","Digitization") do |l|
-          CF::InputFormat.new({:line => l, :name => "Company", :required => true, :valid_type => "general"})
+          CF::InputFormat.new({:line => l, :name => "Company", :required => true})
           CF::InputFormat.new({:line => l, :name => "Website", :required => true, :valid_type => "url"})
           CF::Station.create({:line => l, :type => "work", :input_formats=> {:station_0 => [{:name => "Company"},{:name => "Website", :except => true}]}}) do |s|
             CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
@@ -192,7 +192,6 @@ describe CF::Station do
         station_1.input_formats.count.should eql(1)
         station_1.input_formats.first.name.should eql("Company")
         station_1.input_formats.first.required.should eql(true)
-        station_1.input_formats.first.valid_type.should eql("general")
         station_2 = line.stations.last.get
         station_2.input_formats.count.should eql(3)
         station_2.input_formats.map(&:name).should include("Website")
@@ -202,8 +201,6 @@ describe CF::Station do
         station_2.input_formats.map(&:required).should include(false) #how to make it true
         station_2.input_formats.map(&:required).should include(false)
         station_2.input_formats.map(&:valid_type).should include("url")
-        station_2.input_formats.map(&:valid_type).should include("general")
-        station_2.input_formats.map(&:valid_type).should include("general")
       end
     end
   end
@@ -259,7 +256,7 @@ describe CF::Station do
         line = CF::Line.create("batch_size_line", "Digitization") do
           CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work", :batch_size => 3}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 2, :reward => 20})
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
             CF::TaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
               CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
               CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
@@ -269,7 +266,7 @@ describe CF::Station do
         end
         line.stations.first.type.should eql("WorkStation")
         line.stations.first.batch_size.should eql(3)
-        line.stations.first.worker.number.should eql(2)
+        line.stations.first.worker.number.should eql(1)
         line.stations.first.worker.reward.should eql(20)
       end
     end

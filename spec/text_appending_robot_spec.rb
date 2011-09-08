@@ -14,7 +14,7 @@ module CF
           <input type="submit" /></form>'
 
           line = CF::Line.create("text_appending_robot", "Digitization") do
-            CF::InputFormat.new({:line => self,:name => "Company", :required => true, :valid_type => "general"})
+            CF::InputFormat.new({:line => self,:name => "Company", :required => true})
             CF::InputFormat.new({:line => self,:name => "Website", :required => true, :valid_type => "url"})
             CF::Station.create({:line => self, :type => "work"}) do |s|
               CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
@@ -48,7 +48,7 @@ module CF
           <input type="submit" /></form>'
           
           line = CF::Line.new("text_appending_robot_1","Digitization")
-          input_format = CF::InputFormat.new({:name => "Company", :required => true, :valid_type => "general"})
+          input_format = CF::InputFormat.new({:name => "Company", :required => true})
           input_format_1 = CF::InputFormat.new({:name => "Website", :required => true, :valid_type => "url"})
           line.input_formats input_format
           line.input_formats input_format_1

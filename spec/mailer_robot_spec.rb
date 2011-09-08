@@ -9,15 +9,16 @@ module CF
         VCR.use_cassette "robot_worker/mailer_robot/block/create-worker-single-station", :record => :new_episodes do
           @template = "<html><body><h1>Hello {{to}} Welcome to CLoudfactory!!!!</h1><p>Thanks for using!!!!</p></body></html>"
           line = CF::Line.create("mailer_robot","Digitization") do |l|
-            CF::InputFormat.new({:line => l, :name => "to", :valid_type => "general", :required => "true"})
+            CF::InputFormat.new({:line => l, :name => "to", :required => "true"})
             CF::Station.create({:line => l, :type => "work"}) do |s|
               CF::RobotWorker.create({:station => s, :type => "mailer_robot", :settings => {:to => ["manish.das@sprout-technology.com"], :template => @template}})
             end
           end
           run = CF::Run.create(line, "mailer_robot_run", [{"to"=> "manish.das@sprout-technology.com"}])
+          # sleep 20
           output = run.final_output
-          output.first['recipients_of_to'].should eql([["manish.das@sprout-technology.com"]])
-          output.first['sent_message_for_to'].should eql(["<html><body><h1>Hello manish.das@sprout-technology.com Welcome to CLoudfactory!!!!</h1><p>Thanks for using!!!!</p></body></html>"])
+          output.first['recipients_of_to'].should eql(["manish.das@sprout-technology.com"])
+          output.first['sent_message_for_to'].should eql("<html><body><h1>Hello manish.das@sprout-technology.com Welcome to CLoudfactory!!!!</h1><p>Thanks for using!!!!</p></body></html>")
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.01)
           line.stations.first.worker.number.should eql(1)
@@ -31,7 +32,7 @@ module CF
         VCR.use_cassette "robot_worker/mailer_robot/plain-ruby/create-worker-in-first-station", :record => :new_episodes do
           @template = "<html><body><h1>Hello {{to}} Welcome to CLoudfactory!!!!</h1><p>Thanks for using!!!!</p></body></html>"
           line = CF::Line.new("mailer_robot_1","Digitization")
-          input_format = CF::InputFormat.new({:name => "to", :required => "true", :valid_type => "general"})
+          input_format = CF::InputFormat.new({:name => "to", :required => "true"})
           line.input_formats input_format
 
           station = CF::Station.new({:type => "work"})
@@ -41,9 +42,10 @@ module CF
           line.stations.first.worker = worker
 
           run = CF::Run.create(line, "mailer_robot_run_1", [{"to"=> "manish.das@sprout-technology.com"}])
+          # sleep 20
           output = run.final_output
-          output.first['recipients_of_to'].should eql([["manish.das@sprout-technology.com"]])
-          output.first['sent_message_for_to'].should eql(["<html><body><h1>Hello manish.das@sprout-technology.com Welcome to CLoudfactory!!!!</h1><p>Thanks for using!!!!</p></body></html>"])
+          output.first['recipients_of_to'].should eql(["manish.das@sprout-technology.com"])
+          output.first['sent_message_for_to'].should eql("<html><body><h1>Hello manish.das@sprout-technology.com Welcome to CLoudfactory!!!!</h1><p>Thanks for using!!!!</p></body></html>")
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.01)
           line.stations.first.worker.number.should eql(1)

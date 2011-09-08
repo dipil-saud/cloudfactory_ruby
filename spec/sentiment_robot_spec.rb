@@ -14,6 +14,7 @@ module CF
             end
           end
           run = CF::Run.create(line, "sentiment_robot_run", [{"url"=> "http://www.thehappyguy.com/happiness-self-help-book.html"}])
+          # sleep 20
           output = run.final_output
           output.first['sentiment_of_url'].should eql("positive")
           output.first['sentiment_relevance_of_url'].should eql(24.0408)
@@ -39,6 +40,7 @@ module CF
           line.stations.first.worker = worker
 
           run = CF::Run.create(line, "sentiment_robot_run_1", [{"url"=> "http://www.thehappyguy.com/happiness-self-help-book.html"}])
+          # sleep 20
           output = run.final_output
           output.first['sentiment_of_url'].should eql("positive")
           output.first['sentiment_relevance_of_url'].should eql(24.0408)

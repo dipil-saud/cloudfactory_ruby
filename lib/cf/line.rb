@@ -290,7 +290,8 @@ module CF
     # ===Usage Example:
     #   CF::Line.public_lines
     def self.public_lines
-      get("/public_lines.json")
+      resp = get("/public_lines.json")
+      resp.lines
     end
 
     # ==Updates a line

@@ -14,6 +14,7 @@ module CF
             end
           end
           run = CF::Run.create(line, "image_processing_robot_run", [{"url"=> "http://wwwdelivery.superstock.com/WI/223/1527/PreviewComp/SuperStock_1527R-020214.jpg"}])
+          # sleep 20
           output = run.final_output
           converted_url = output.first['processed_image_of_url']
           File.exist?("/Users/manish/apps/cloudfactory/public#{converted_url}").should eql(true)
@@ -39,6 +40,7 @@ module CF
           line.stations.first.worker = worker
 
           run = CF::Run.create(line, "image_processing_robot_run_1", [{"url"=> "http://wwwdelivery.superstock.com/WI/223/1527/PreviewComp/SuperStock_1527R-020214.jpg"}])
+          # sleep 20
           output = run.final_output
           converted_url = output.first['processed_image_of_url']
           File.exist?("/Users/manish/apps/cloudfactory/public#{converted_url}").should eql(true)

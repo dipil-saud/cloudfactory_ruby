@@ -8,7 +8,7 @@ describe CF::TaskForm do
         line = CF::Line.create("Digiti-ard-2", "Digitization") do
           CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work"}) do |station|
-            CF::HumanWorker.new({:station => station, :number => 2, :reward => 20})
+            CF::HumanWorker.new({:station => station, :number => 1, :reward => 20})
             CF::TaskForm.create({:station => station, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
               CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
               CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
@@ -31,7 +31,7 @@ describe CF::TaskForm do
         line = CF::Line.create("Display_task_form", "Digitization") do
           CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work"}) do |station|
-            CF::HumanWorker.new({:station => station, :number => 2, :reward => 20})
+            CF::HumanWorker.new({:station => station, :number => 1, :reward => 20})
             CF::TaskForm.create({:station => station, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
               CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
               CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})
@@ -49,12 +49,12 @@ describe CF::TaskForm do
         line = CF::Line.create("Digiti-ard-2", "Digitization") do
           CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work"}) do |station|
-            CF::HumanWorker.new({:station => station, :number => 2, :reward => 20})
+            CF::HumanWorker.new({:station => station, :number => 1, :reward => 20})
             CF::TaskForm.new({:station => station})
           end
         end
         form = line.stations[0].form
-        form.errors.should eql("[\"Title can't be blank\", \"Instruction can't be blank\"]")
+        form.errors.should eql(["Title can't be blank", "Instruction can't be blank"])
         form.instruction.should eq(nil)
         form.form_fields.should eq([])
       end
@@ -66,12 +66,12 @@ describe CF::TaskForm do
         line = CF::Line.create("Digiti-ard-21", "Digitization") do
           CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work"}) do |station|
-            CF::HumanWorker.new({:station => station, :number => 2, :reward => 20})
+            CF::HumanWorker.new({:station => station, :number => 1, :reward => 20})
             CF::TaskForm.new({:station => station, :instruction => "describe"})
           end
         end
         form = line.stations[0].form
-        form.errors.should eql("[\"Title can't be blank\"]")
+        form.errors.should eql(["Title can't be blank"])
         form.instruction.should eq("describe")
         form.form_fields.should eq([])
       end
@@ -83,12 +83,12 @@ describe CF::TaskForm do
         line = CF::Line.create("Digiti-ard-22", "Digitization") do
           CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work"}) do |station|
-            CF::HumanWorker.new({:station => station, :number => 2, :reward => 20})
+            CF::HumanWorker.new({:station => station, :number => 1, :reward => 20})
             CF::TaskForm.new({:station => station, :title => "title"})
           end
         end
         form = line.stations[0].form
-        form.errors.should eql("[\"Instruction can't be blank\"]")
+        form.errors.should eql(["Instruction can't be blank"])
         form.title.should eq("title")
         form.form_fields.should eq([])
       end
@@ -102,7 +102,7 @@ describe CF::TaskForm do
         line = CF::Line.create("Digitizerdd", "Digitization") do
           CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work"}) do |station|
-            CF::HumanWorker.new({:station => station, :number => 2, :reward => 20})
+            CF::HumanWorker.new({:station => station, :number => 1, :reward => 20})
             CF::TaskForm.create({:station => station, :title => "Enter text from a business card image", :instruction => "Describe"}) do |i|
               CF::FormField.new({:form => i, :label => "First Name", :field_type => "short_answer", :required => "true"})
               CF::FormField.new({:form => i, :label => "Middle Name", :field_type => "short_answer"})

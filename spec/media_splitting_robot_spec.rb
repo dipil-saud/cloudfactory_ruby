@@ -14,6 +14,7 @@ module CF
             end
           end
           run = CF::Run.create(line, "media_splitting_robot_run", [{"url"=> "http://media-robot.s3.amazonaws.com/media_robot/media/upload/8/ten.mov"}])
+          # sleep 20
           output = run.final_output
           converted_url_1= output.first['splits_of_url'].first
           converted_url_2= output.first['splits_of_url'].last
@@ -41,6 +42,7 @@ module CF
           line.stations.first.worker = worker
 
           run = CF::Run.create(line, "media_splitting_robot_run_1", [{"url"=> "http://media-robot.s3.amazonaws.com/media_robot/media/upload/8/ten.mov"}])
+          # sleep 20
           output = run.final_output
           converted_url_1= output.first['splits_of_url'].first
           converted_url_2= output.first['splits_of_url'].last

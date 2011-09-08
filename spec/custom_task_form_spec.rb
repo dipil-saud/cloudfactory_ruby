@@ -79,7 +79,7 @@ describe CF::CustomTaskForm do
           CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
           CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work"}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 3, :reward => 20})
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
             CF::CustomTaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe", :raw_html => html, :raw_css => css, :raw_javascript => javascript})
           end
         end
@@ -222,13 +222,13 @@ describe CF::CustomTaskForm do
           CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
           CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 3, :reward => 20})
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
             CF::CustomTaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe", :raw_html => html})
           end
         end
         line.title.should eql("Digitizecustomform111")
         line.department_name.should eql("Digitization")
-        line.stations.first.form.errors.should eql("[\"Raw html should contain a Form tag\", \"Raw html The name 'final_output[first_name]' is not valid, it should be of format output[name]\", \"Raw html The name 'final_output[middle_name]' is not valid, it should be of format output[name]\", \"Raw html The name 'final_output[last_name]' is not valid, it should be of format output[name]\", \"Raw html The name 'final_output[email]' is not valid, it should be of format output[name]\", \"Raw html The name 'final_output[phone]' is not valid, it should be of format output[name]\", \"Raw html The name 'final_output[mobile]' is not valid, it should be of format output[name]\"]")
+        line.stations.first.form.errors.should eql(["Raw html should contain a Form tag", "Raw html The name 'final_output[first_name]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[middle_name]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[last_name]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[email]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[phone]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[mobile]' is not valid, it should be of format output[name]"])
       end
     end
     
@@ -265,13 +265,13 @@ describe CF::CustomTaskForm do
           CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
           CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 3, :reward => 20})
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
             CF::CustomTaskForm.create({:station => s, :instruction => "Describe", :raw_html => html})
           end
         end
         line.title.should eql("Digitizecustomform112")
         line.department_name.should eql("Digitization")
-        line.stations.first.form.errors.should eql("[\"Title can't be blank\", \"Raw html should contain a Form tag\"]")
+        line.stations.first.form.errors.should eql(["Title can't be blank", "Raw html should contain a Form tag"])
       end
     end
     
@@ -308,13 +308,13 @@ describe CF::CustomTaskForm do
           CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
           CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 3, :reward => 20})
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
             CF::CustomTaskForm.create({:station => s, :title => "title", :raw_html => html})
           end
         end
         line.title.should eql("Digitizecustomform113")
         line.department_name.should eql("Digitization")
-        line.stations.first.form.errors.should eql("[\"Instruction can't be blank\", \"Raw html should contain a Form tag\"]")
+        line.stations.first.form.errors.should eql(["Instruction can't be blank", "Raw html should contain a Form tag"])
       end
     end
     
@@ -325,13 +325,13 @@ describe CF::CustomTaskForm do
           CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
           CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 3, :reward => 20})
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
             CF::CustomTaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"})
           end
         end
         line.title.should eql("Digitizecustomform114")
         line.department_name.should eql("Digitization")
-        line.stations.first.form.errors.should eql("[\"Raw html is required\"]")
+        line.stations.first.form.errors.should eql(["Raw html is required"])
       end
     end
     
@@ -342,7 +342,7 @@ describe CF::CustomTaskForm do
           CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
           CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 3, :reward => 20})
+            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
           end
         end
         
@@ -351,7 +351,7 @@ describe CF::CustomTaskForm do
         
         line.title.should eql("Digitizecustomform115")
         line.department_name.should eql("Digitization")
-        line.stations.first.form.errors.should eql("[\"Raw html is required\"]")
+        line.stations.first.form.errors.should eql(["Raw html is required"])
       end
     end
   end

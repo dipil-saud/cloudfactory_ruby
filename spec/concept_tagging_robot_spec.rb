@@ -14,6 +14,7 @@ module CF
             end
           end
           run = CF::Run.create(line, "concept_tagging_robot_run", [{"url"=>"www.mosexindex.com"}])
+          # sleep 20 # require delay for final_output's processing
           output = run.final_output
           output.first['concept_tagging_of_url'].should eql(["Canada", "English language"])
           output.first['concept_tagging_relevance_of_url'].should eql([89.5153, 79.0912])
@@ -39,6 +40,7 @@ module CF
           line.stations.first.worker = worker
 
           run = CF::Run.create(line, "concept_tagging_robot_run_1", [{"url"=>"www.mosexindex.com"}])
+          # sleep 20 # require delay for final_output's processing
           output = run.final_output
           output.first['concept_tagging_of_url'].should eql(["Canada", "English language"])
           output.first['concept_tagging_relevance_of_url'].should eql([89.5153, 79.0912])

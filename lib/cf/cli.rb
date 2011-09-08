@@ -33,18 +33,18 @@ module Cf # :nodoc: all
   class CLI < Thor # :nodoc: all
     include Thor::Actions
     include Cf::Config
-    
+
     map "-v" => :version
-    
+
     desc "login", "Setup the cloudfactory credentials"
 
     def login
       email = ask("Enter your email:")
       passwd = ask_password("Enter the password: ")
-      
+
       set_target_uri(false)
       resp = CF::Account.login(email, passwd)
-      
+
       if resp.error.blank? and resp.api_key.present?
         File.open(config_file, 'w') {|f| f.write("#Don't change this file unless you know what you're doing\n" + { :target_url => CF.api_url, :api_version => CF.api_version, :api_key => resp.api_key, :account_name => resp.account_name, :email => email.strip }.to_yaml) }
         say("\nNow you're logged in.\nTo get started, run cf help\n", :green)
@@ -52,7 +52,7 @@ module Cf # :nodoc: all
         say("\n#{resp.error.message}\nTry again with valid one.\n", :red)
       end
     end
-    
+
     no_tasks do
       def ask_password(message)
         ::HighLine.new.ask(message) do |q| 
@@ -60,18 +60,18 @@ module Cf # :nodoc: all
         end
       end
     end
-    
+
     desc "whoami", "to know what credential you are using"
     def whoami
       if File.exists?(config_file)
-          yp = YAML::load(File.open(config_file,'r'))
-          say("\nAccount => #{yp[:account_name]}", :green)
-          say("Email => #{yp[:email]}\n", :green)
+        yp = YAML::load(File.open(config_file,'r'))
+        say("\nAccount => #{yp[:account_name]}", :green)
+        say("Email => #{yp[:email]}\n", :green)
       else
-          say("\nPlease login with cf login\n")
+        say("\nPlease login with cf login\n")
       end
     end
-    
+
     # desc "target", "Setup the cloudfactory credentials. e.g. cf target staging #=> http://sandbox.staging.cloudfactory.com (options: staging/development/production)"
     # def target(target_url=nil)
     #   if target_url.present?
@@ -93,62 +93,62 @@ module Cf # :nodoc: all
 
     desc "form", "Commands to generate custom task forms. For more info, cf form help"
     subcommand "form", Cf::Form
-    
+
     desc "production", "Commands to create production runs. For more info, cf production help"
     # cannot use Run for the class name coz its a reserved word for Thor
     # later it can be replaced with hacked millisami-thor version of the thor library with run-time dependency via Bundler
     subcommand "production", Cf::Production
 
     desc "output <run-title>", "Get the output of run. For more info, cf output help"
+    method_option :run_title, :type => :string, :required => true, :aliases => "-t", :desc => "the index of the station"
     method_option :station_index, :type => :numeric, :aliases => "-s", :desc => "the index of the station"
-    def output(run_title=nil)
+    def output
+      run_title = options['run_title']
       if run_title.present?
         run_title = run_title.parameterize
         line_source = Dir.pwd
         yaml_source = "#{line_source}/line.yml"
 
-        unless File.exist?(yaml_source)
-          say "The line.yml file does not exist in this directory", :red
-          return
-        end
-        
         set_target_uri(false)
-        if set_api_key(yaml_source)
-          CF.account_name = CF::Account.info.name if CF.account_name.blank?
-          run = CF::Run.find(run_title)
-          if run.errors.blank?
-            say("Fetching output for run: #{run_title}", :green)
-            
-            if options[:station_index].present?
-              # Output for specific station
-              output = CF::Run.output(:title => run_title, :station => options[:station_index])
-            else
-              # Ouput for the whole production run
-              output = CF::Run.final_output(run_title)
-            end
-            res_array = []
-            output.each do |o|
-              res_array << o.to_hash
-            end
+        set_api_key(yaml_source)
+        CF.account_name = CF::Account.info.name
+        run = CF::Run.find(run_title)
+        if run.errors.blank?
+          say("Fetching output for run: #{run_title}", :green)
+
+          if options[:station_index].present?
+            # Output for specific station
+            output = CF::Run.output(:title => run_title, :station => options[:station_index])
+          else
+            # Ouput for the whole production run
+            output = CF::Run.final_output(run_title)
+          end
+          res_array = []
+          output.each do |o|
+            res_array << o.to_hash
+          end
+          if !res_array.empty?
+            res_array.each 
             csv_str = CSVHash(res_array,res_array.first.keys)
-            
-            FileUtils.mkdir("#{line_source}/output") unless Dir.exist?("#{line_source}/output")
+            csv_str = csv_str.gsub("\"\"", '"')
+            FileUtils.mkdir("#{line_source}/output") unless Dir.exist?("#{line_source}/output") if RUBY_VERSION > "1.9"
+            FileUtils.mkdir("#{line_source}/output") unless File.directory?("#{line_source}/output") if RUBY_VERSION < "1.9"
             csv_file_name = "#{line_source}/output/#{run_title}-#{Time.now.strftime("%e %b %Y %H:%m-%S%p").parameterize}.csv"
             File.open(csv_file_name, 'w') {|f| f.write(csv_str) }
             say("Output saved at #{csv_file_name}\n", :yellow)
           else
-            say("Error: #{run.errors.inspect}")
+            say("Run not completed yet", :red)
           end
-          
         else
-          say("\nAPI key missing in line.yml file\n")
+          say("Error: #{run.errors.inspect}", :red)
         end
+
       else
         say("\nThe run title must be provided to get the output.", :red)
         say("\te.g. cf output my-run-title\n", :yellow)
       end
     end
-    
+
     desc "version", "Shows the current version of cloudfactory gem"
     def version
       say("Version: #{CF::VERSION}")

@@ -14,9 +14,10 @@ module CF
             end
           end
           run = CF::Run.create(line, "content_scraping_robot_run", [{"url"=> "http://www.sprout-technology.com"}])
-          
+          # sleep 30
           output = run.final_output
-          output.first['scraped_link_from_document'].should eql([["http://www.cloudfactory.com", "http://www.bizcardarmy.com"]])
+          output.first['scraped_link_from_document'].should eql([""])
+          output.first['scraped_text_from_document'].should eql([""])
 
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)
@@ -40,9 +41,10 @@ module CF
           line.stations.first.worker = worker
 
           run = CF::Run.create(line, "content_scraping_robot_run_1", [{"url"=> "http://www.sprout-technology.com"}])
-          
+          # sleep 30
           output = run.final_output
-          output.first['scraped_link_from_document'].should eql([["http://www.cloudfactory.com", "http://www.bizcardarmy.com"]])
+          output.first['scraped_link_from_document'].should eql([""])
+          output.first['scraped_text_from_document'].should eql([""])
 
           line.stations.first.worker.class.should eql(CF::RobotWorker)
           line.stations.first.worker.reward.should eql(0.5)

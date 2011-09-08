@@ -17,6 +17,7 @@ module CF
             end
           end
           run = CF::Run.create(line, "keyword_matching_robot_run", [{"url"=> "http://techcrunch.com/2011/07/26/with-v2-0-assistly-brings-a-simple-pricing-model-rewards-and-a-bit-of-free-to-customer-service-software"}])
+          # sleep 20
           output = run.final_output
           output.first['included_keywords_count_in_contents_of_url'].should eql(["3", "2", "2"])
           output.first['keyword_included_in_contents_of_url'].should eql(["SaaS", "see", "additional"])
@@ -53,6 +54,7 @@ module CF
           line.stations.last.worker = worker
 
           run = CF::Run.create(line, "keyword_matching_robot_run_1", [{"url"=> "http://techcrunch.com/2011/07/26/with-v2-0-assistly-brings-a-simple-pricing-model-rewards-and-a-bit-of-free-to-customer-service-software"}])
+          # sleep 20
           output = run.final_output
           output.first['included_keywords_count_in_contents_of_url'].should eql(["3", "2", "2"])
           output.first['keyword_included_in_contents_of_url'].should eql(["SaaS", "see", "additional"])

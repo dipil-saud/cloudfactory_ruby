@@ -6,10 +6,9 @@ describe CF::InputFormat do
       # WebMock.allow_net_connect!
       VCR.use_cassette "input_formats/plain-ruby/create-within-line", :record => :new_episodes do
         line = CF::Line.new("Digitize","Digitization")
-        input_format = CF::InputFormat.new({:name => "Company", :required => true, :valid_type => "general"})
+        input_format = CF::InputFormat.new({:name => "Company", :required => true})
         line.input_formats input_format
         line.input_formats.first.name.should eql("Company")
-        line.input_formats.first.valid_type.should eql("general")
       end
     end
 
@@ -82,7 +81,7 @@ describe CF::InputFormat do
         line = CF::Line.create("Display_input_format", "Digitization") do
           CF::InputFormat.new({:line => self, :name => "image_url", :required => true, :valid_type => "url"})
           CF::Station.create({:line => self, :type => "work"}) do |station|
-            CF::HumanWorker.new({:station => station, :number => 2, :reward => 20})
+            CF::HumanWorker.new({:station => station, :number => 1, :reward => 20})
           end
         end
         line.input_formats.first.to_s.should eql("{:id => #{line.input_formats.first.id}, :name => image_url, :required => true, :valid_type => url, :errors => }")
