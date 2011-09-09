@@ -1,3 +1,10 @@
+## 0.2.6 (2011-09-09)
+
+* cf line inspect cmd changed to cf line details because the inspect method is the Ruby's declared method
+* acceptance_ratio parameter added in gem for tournament station
+* while creating a line which has production runs was giving inappropriate messages. its fixed.
+* sample line input file now has our own hosted files
+
 ## 0.2.5 (2011-09-01)
 
 * Broken url after doing production run on date 01 - 09 day. Fixed
