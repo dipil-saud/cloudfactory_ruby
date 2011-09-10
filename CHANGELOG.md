@@ -1,3 +1,7 @@
+## 0.2.7 (2011-09-11)
+
+* acceptance_ratio bug fixed
+
 ## 0.2.6 (2011-09-09)
 
 * cf line inspect cmd changed to cf line details because the inspect method is the Ruby's declared method
