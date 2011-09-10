@@ -52,7 +52,9 @@ module Cf
                     errors << "Reward Must be greater than 0 in Block station #{i+1}!" if !reward.nil? && reward < 1
                   end
                   acceptance_ratio = station['station']['acceptance_ratio']
-                  errors << "Acceptance ratio must lie between 0 and 1 in Block station #{i+1}!" if !acceptance_ratio.nil? && acceptance_ratio > 1 or acceptance_ratio < 0
+                  if !acceptance_ratio.nil?
+                    errors << "Acceptance ratio must lie between 0 and 1 in Block station #{i+1}!" if acceptance_ratio > 1 or acceptance_ratio < 0
+                  end
                 end
                 # Checking Worker
                 worker = station['station']['worker']
