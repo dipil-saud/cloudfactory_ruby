@@ -112,8 +112,9 @@ module Cf # :nodoc: all
     method_option :line, :type => :string, :aliases => "-l", :desc => "the title of the line, if the line title is not given, it will show all the production runs under your account"
     method_option :page, :type => :numeric, :aliases => "-p", :desc => "page number"
     method_option :all, :type => :boolean, :default => false, :aliases => '-a', :desc => "list all the production runs"
+    method_option :live, :type => :boolean, :default => false, :aliases => '-l', :desc => "Lists all the Live Production Run."
     def list
-      set_target_uri(false)
+      set_target_uri(options[:live])
       set_api_key
       CF.account_name = CF::Account.info.name
       param = {}
