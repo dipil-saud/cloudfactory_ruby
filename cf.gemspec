@@ -20,8 +20,8 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.post_install_message =<<EOF
- ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁
- 
+--------------------------------------------------------------------------------
+
   Sweet. You now have the 'cf' command installed. Test drive it with:
   > cf help
 
@@ -58,7 +58,7 @@ Gem::Specification.new do |s|
   Add your project or organization to the apps wiki!
   https://github.com/sprout/cloudfactory_ruby/wiki/Apps
   
- ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁ ☁
+--------------------------------------------------------------------------------
 EOF
 
   s.add_dependency  "i18n"
