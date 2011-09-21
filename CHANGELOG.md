@@ -1,3 +1,8 @@
+## 0.3.0 (2011-09-21)
+
+* removed the clouds due to utf-8 chars issue on some system while installing the gem
+* cf production list now has --live flag to list the live production runs
+
 ## 0.2.7 (2011-09-11)
 
 * acceptance_ratio bug fixed
