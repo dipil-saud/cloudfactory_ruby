@@ -1,4 +1,10 @@
+## 0.3.1 (2011-09-22)
+
+* added --live option while adding units to existing production run
+
 ## 0.3.0 (2011-09-21)
+
+* removed the clouds due to utf-8 chars issue on some system while installing the gem
 
 * removed the clouds due to utf-8 chars issue on some system while installing the gem
 * cf production list now has --live flag to list the live production runs
