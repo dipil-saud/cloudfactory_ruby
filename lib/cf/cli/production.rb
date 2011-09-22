@@ -196,8 +196,9 @@ module Cf # :nodoc: all
     desc "production add_units", "add units to already existing production run"
     method_option :run_title, :type => :string, :required => true, :aliases => "-t", :desc => "the title of the run to resume"
     method_option :input_data, :type => :string, :required => true, :aliases => "-i", :desc => "the path of the input data file"
+    method_option :live, :type => :boolean, :default => false, :aliases => '-l', :desc => "Live Addition of units to the Production Run"
     def add_units
-      set_target_uri(false)
+      set_target_uri(options[:live])
       set_api_key
       CF.account_name = CF::Account.info.name
       run_title = options[:run_title].parameterize
