@@ -51,11 +51,9 @@ module CF
       if station
         request = options[:settings].merge(:type => @type)
         resp = self.class.post("/lines/#{CF.account_name}/#{station.line_title.downcase}/stations/#{station.index}/workers.json", :worker => request)
-        if resp.code != 200
-          self.errors = resp.error.message
-        end
-        self.number = resp.number
-        self.reward = resp.reward
+        self.errors = resp['error']['message'] if resp['code'] != 200
+        self.number = resp['number']
+        self.reward = resp['reward']
         self.station = station
         station.worker = self
       end

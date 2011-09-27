@@ -12,10 +12,7 @@ module CF
       #   CF::Account.info
       def info
         resp = get('/account.json')
-
-        if resp.code != 200
-          self.errors = resp.error.message
-        end
+        self.errors = resp['error']['message'] if resp['code'] != 200
         return resp
       end
 
@@ -32,8 +29,8 @@ module CF
       #   CF::Account.login("sprout@sprout-technology.com", "password")
       def login(email, passwd)
         resp = post('/account_login.json', :user => {:email => email, :password => passwd})
-        self.errors = resp.error.message if resp.code != 200
-        resp
+        self.errors = resp['error']['message'] if resp['code'] != 200
+        return resp
       end
     end
   end
