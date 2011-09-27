@@ -48,9 +48,7 @@ module CF
         else
           resp = self.class.post("/lines/#{CF.account_name}/#{@line_title.downcase}/runs.json", {:data => {:run => {:title => @title}}, @param_for_input => @param_data})
         end
-        if resp.code != 200
-          self.errors = resp.error.message
-        end
+        self.errors = resp['error']['message'] if resp['code'] != 200
       else
         @input = input
         @param_data = input
@@ -109,7 +107,7 @@ module CF
         if File.exist?(file.to_s)
           file_upload = File.new(file, 'rb')
           resp = post("/runs/#{CF.account_name}/#{run_title.downcase}/units.json", {:file => file_upload})
-          @errors = resp.error.message if resp.code != 200
+          @errors = resp['error']['message'] if resp['code'] != 200
           return resp.to_hash
         end
       end
@@ -119,14 +117,8 @@ module CF
     #   run_object.final_output
     def final_output
       resp = self.class.get("/runs/#{CF.account_name}/#{self.title.downcase}/output.json")
-      self.errors = resp.error.message if resp.code != 200
-      output = []
-      if resp['output'].class == Array
-        resp['output'].each do |o|
-          output << o.to_hash
-        end
-      end
-      return output
+      self.errors = resp['error']['message'] if resp['code'] != 200
+      return resp['output']
     end
 
     # ==Returns Final Output of production Run
@@ -134,14 +126,8 @@ module CF
     #   CF::Run.final_output("run_title")
     def self.final_output(title)
       resp = get("/runs/#{CF.account_name}/#{title.downcase}/output.json")
-      @errors = resp.error.message if resp.code != 200
-      output = []
-      if resp['output'].class == Array
-        resp['output'].each do |o|
-          output << o.to_hash
-        end
-      end
-      return output
+      @errors = resp['error']['message'] if resp['code'] != 200
+      return resp['output']
     end
     
     # ==Returns Output of production Run for any specific Station and for given Run Title
@@ -152,14 +138,8 @@ module CF
       station_no = options[:station]
       title = options[:title]
       resp = get("/runs/#{CF.account_name}/#{title.downcase}/output/#{station_no}.json")
-      @errors = resp.error.message if resp.code != 200
-      output = []
-      if resp['output'].class == Array
-        resp['output'].each do |o|
-          output << o.to_hash
-        end
-      end
-      return output
+      @errors = resp['error']['message'] if resp['code'] != 200
+      return resp['output']
     end
     
     # ==Returns Output of Run object for any specific Station
@@ -169,14 +149,8 @@ module CF
     def output(options={})
       station_no = options[:station]
       resp = self.class.get("/runs/#{CF.account_name}/#{self.title.downcase}/output/#{station_no}.json")
-      self.errors = resp.error.message if resp.code != 200
-      output = []
-      if resp['output'].class == Array
-        resp['output'].each do |o|
-          output << o.to_hash
-        end
-      end
-      return output
+      self.errors = resp['error']['message'] if resp['code'] != 200
+      return resp['output']
     end
     
     # ==Searches Run for the given "run_title"
@@ -184,11 +158,11 @@ module CF
     #   CF::Run.find("run_title")
     def self.find(title)
       resp = get("/runs/#{CF.account_name}/#{title.downcase}.json")
-      if resp.code != 200
-        @errors = resp.error.message
-        resp.error = resp.error.message
-        resp.merge!(:errors => "#{resp.error}")
-        resp.delete(:error)
+      if resp['code'] != 200
+        @errors = resp['error']['message']
+        resp['error'] = resp['error']['message']
+        resp.merge!('errors' => "#{resp['error']}")
+        resp.delete('error')
       end
       return resp
     end
@@ -238,22 +212,11 @@ module CF
         end
       end
       
-      if resp.code != 200
-        send_resp = {"error" => resp.error.message}
+      if resp['code'] != 200
+        send_resp = {"error" => resp['error']['message']}
         return send_resp
-      end
-
-      new_resp = []
-      if resp.code == 200
-        if resp.runs
-          if resp.runs.count > 0
-            resp.runs.each do |r|
-              new_resp << r.to_hash
-            end
-          end
-        end
-        send_resp = {"runs" => new_resp, "total_pages" => resp.total_pages, "total_runs" => resp.total_runs}
-        return send_resp
+      else
+        return resp
       end
     end
     
@@ -262,7 +225,7 @@ module CF
     #   resume_run = CF::Run.resume("run_title")
     def self.resume(run_title)
       resp = post("/runs/#{CF.account_name}/#{run_title}/resume.json")
-      @errors = resp.error.message if resp.code != 200
+      @errors = resp['error']['message'] if resp['code'] != 200
       return resp
     end
   
@@ -271,7 +234,7 @@ module CF
     #   delete_run = CF::Run.destroy("run_title")
     def self.destroy(run_title)
       resp = delete("/runs/#{CF.account_name}/#{run_title}.json")
-      @errors = resp.error.message if resp.code != 200
+      @errors = resp['error']['message'] if resp['code'] != 200
       return resp
     end
   end

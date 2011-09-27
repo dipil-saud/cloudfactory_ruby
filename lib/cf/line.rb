@@ -43,9 +43,8 @@ module CF
       @public = options[:public].nil? ? true : options[:public]
       @description = options[:description]
       resp = self.class.post("/lines/#{CF.account_name}.json", {:line => {:title => title, :department_name => department_name, :public => @public, :description => @description}})
-      if resp.code != 200
-        self.errors = resp.error.message
-      end
+      self.errors = resp['error']['message'] if resp['code'] != 200
+      return resp
     end
 
     # ==Adds station in a line
@@ -128,9 +127,7 @@ module CF
           station.batch_size = @batch_size
           station.line = self
           station.line_title = self.title
-          if resp.response.code != "200"
-            station.errors = resp.parsed_response['error']['message']
-          end
+          station.errors = resp.parsed_response['error']['message'] if resp.response.code != "200"
           @stations << station
         end
       else
@@ -191,9 +188,7 @@ module CF
         @resp.each_pair do |k,v|
           input_format.send("#{k}=",v) if input_format.respond_to?(k)
         end
-        if @resp.code != 200
-          input_format.errors = @resp.error.message
-        end
+        input_format.errors = @resp['error']['message'] if @resp['code'] != 200
         @input_formats << input_format
       else
         @input_formats
@@ -242,7 +237,7 @@ module CF
       else
         resp = get("/lines/#{CF.account_name}/#{line.downcase}.json")
       end
-      @errors = resp.error.message if resp.code != 200
+      @errors = resp['error']['message'] if resp['code'] != 200
       return resp
     end
 
@@ -263,8 +258,8 @@ module CF
           resp = get("/lines/#{CF.account_name}/#{line.downcase}.json")
         end
       end
-      @errors = resp.error.message if resp.code != 200
-      return resp.to_hash
+      @errors = resp['error']['message'] if resp['code'] != 200
+      return resp
     end
     
     # ==Returns all the lines of an account
@@ -279,17 +274,17 @@ module CF
       else
         resp = get("/lines/#{CF.account_name}.json")
       end
-      @errors = resp.error.message if resp.code != 200
-      new_resp = []
-      if resp.lines
-        if resp.lines.count > 0
-          resp.lines.each do |l|
-            new_resp << l.to_hash
-          end
-        end
-      end
-      send_resp = {"lines" => new_resp, "total_pages" => resp.total_pages, "total_lines" => resp.total_lines}
-      return send_resp
+      @errors = resp['error']['message'] if resp['code'] != 200
+      # new_resp = []
+      #      if resp['lines']
+      #        if resp['lines'].count > 0
+      #          resp['lines'].each do |l|
+      #            new_resp << l.to_hash
+      #          end
+      #        end
+      #      end
+      #      send_resp = {"lines" => new_resp, "total_pages" => resp.total_pages, "total_lines" => resp.total_lines}
+      return resp
     end
     
     # ==Returns all the stations of a line
@@ -301,9 +296,13 @@ module CF
     # ==Return all the public lines
     # ===Usage Example:
     #   CF::Line.public_lines
-    def self.public_lines
-      resp = get("/public_lines.json")
-      resp.lines
+    def self.public_lines(options={})
+      if options[:page]=="all"
+        resp = get("/public_lines.json", :page => "all")
+      else
+        resp = get("/public_lines.json")
+      end
+      return resp['lines']
     end
 
     # ==Updates a line
@@ -331,9 +330,7 @@ module CF
       else
         resp = self.class.delete("/lines/#{CF.account_name}/#{self.title.downcase}.json")
       end
-      if resp.code != 200
-        self.errors = resp.errors.message
-      end
+      self.errors = resp['error']['message'] if resp['code'] != 200
       return resp
     end
     
@@ -348,7 +345,7 @@ module CF
       else
         resp = delete("/lines/#{CF.account_name}/#{title.downcase}.json")
       end
-      @errors = resp.error.message if resp.code != 200
+      @errors = resp['error']['message'] if resp['code'] != 200
       return resp
     end
     
@@ -357,42 +354,42 @@ module CF
     #   line = CF::Line.inspect("line_title")
     def self.inspect(line_title)
       resp = get("/lines/#{CF.account_name}/#{line_title.downcase}/inspect.json")
-      @errors = resp.error.message if resp.code != 200
-      if resp.code == 200
-        send_resp = resp.to_hash
-        @line_input_formats = []
-        resp.input_formats.each do |l_i|
-          @line_input_formats << l_i.to_hash
-        end
-        send_resp.delete("input_formats")
-        send_resp.merge!("input_formats" => @line_input_formats)
-        @stations = []
-      
-        resp.stations.each do |s|
-          @station_input_formats = []
-          s.input_formats.each do |i|
-            @station_input_formats << i.to_hash
-          end
-          @station_form_fields = []
-          @temp_station = s.to_hash
-          if !s.form_fields.nil?
-            s.form_fields.each do |f|
-              @station_form_fields << f.to_hash
-            end
-            @temp_station.delete("form_fields")
-            @temp_station.merge!("form_fields" => @station_form_fields)
-          end
-          @temp_station.delete("input_formats")
-          @temp_station.merge!("input_formats" => @station_input_formats)
-          @stations << @temp_station
-        end
-      
-        send_resp.delete("stations")
-        send_resp.merge!("stations" => @stations)
-        send_resp
-      else
-        resp
-      end
+      @errors = resp['error']['message'] if resp['code'] != 200
+      # if resp['code'] == 200
+      #         send_resp = resp.to_hash
+      #         # @line_input_formats = []
+      #         #        resp.input_formats.each do |l_i|
+      #         #          @line_input_formats << l_i.to_hash
+      #         #        end
+      #         #        send_resp.delete("input_formats")
+      #         #        send_resp.merge!("input_formats" => @line_input_formats)
+      #         # @stations = []
+      #       
+      #         # resp.stations.each do |s|
+      #         #           @station_input_formats = []
+      #         #           s.input_formats.each do |i|
+      #         #             @station_input_formats << i.to_hash
+      #         #           end
+      #         #           @station_form_fields = []
+      #         #           @temp_station = s.to_hash
+      #         #           if !s.form_fields.nil?
+      #         #             s.form_fields.each do |f|
+      #         #               @station_form_fields << f.to_hash
+      #         #             end
+      #         #             @temp_station.delete("form_fields")
+      #         #             @temp_station.merge!("form_fields" => @station_form_fields)
+      #         #           end
+      #         #           @temp_station.delete("input_formats")
+      #         #           @temp_station.merge!("input_formats" => @station_input_formats)
+      #         #           @stations << @temp_station
+      #         #         end
+      #               # 
+      #               # send_resp.delete("stations")
+      #               # send_resp.merge!("stations" => @stations)
+      #         send_resp
+      #       else
+      return resp
+      # end
     end
   end
 end

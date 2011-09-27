@@ -219,11 +219,9 @@ module CF
           worker = CF::RobotWorker.new({})
           worker.settings = @settings
           worker.type = @type
-          worker.number = resp.number
-          worker.reward = resp.reward
-          if resp.code != 200
-            worker.errors = resp.error.message
-          end
+          worker.number = resp['number']
+          worker.reward = resp['reward']
+          worker.errors = resp['error']['message'] if resp['code'] != 200
           @worker_instance = worker
         end
       end
@@ -273,9 +271,7 @@ module CF
         @resp.to_hash.each_pair do |k,v|
           form.send("#{k}=",v) if form.respond_to?(k)
         end
-        if @resp.code != 200
-          form.errors = @resp.error.message
-        end
+        form.errors = @resp['error']['message'] if @resp['code'] != 200
         form.station = self
         @form_instance = form
       end
@@ -291,7 +287,7 @@ module CF
     # returns the station object
     def get
       resp = self.class.get("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}.json")
-      self.errors = resp.error.message if resp.code != 200
+      self.errors = resp['error']['message'] if resp['code'] != 200
       return resp
     end
 
@@ -300,7 +296,7 @@ module CF
     #   @got_form = line.stations[0].get_form
     def get_form
       resp = self.class.get("/lines/#{CF.account_name}/#{self.line_title.downcase}/stations/#{self.index}/form.json")
-      self.errors = resp.error.message if resp.code != 200
+      self.errors = resp['error']['message'] if resp['code'] != 200
       return resp
     end
 

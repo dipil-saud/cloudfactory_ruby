@@ -37,27 +37,17 @@ module CF # :nodoc: all
       end
 
       def handle_response(response)
-        # FIX: raise the exception along with the response error message
-        # Ref: http://www.simonecarletti.com/blog/2009/12/inside-ruby-on-rails-rescuable-and-rescue_from/
-        # case response.code
-        # when 401; raise Unauthorized.new
-        # when 403; raise RateLimitExceeded.new
-        # when 404; raise ::CF::NotFound.new(response)
-        # when 400...500; raise ClientError.new
-        # when 500...600; raise ServerError.new(response.code)
-        # else; response
-        # end
         unless response.length == 2
           parsed_response = JSON.load(response)
           if parsed_response.is_a?(Array)
-            parsed_response.map{|item| Hashie::Mash.new(item)}
+            return parsed_response
           else
             parsed_resp = parsed_response.merge("code" => response.code)
             new_response = parsed_resp.inject({ }) do |x, (k,v)|
               x[k.sub(/\A_/, '')] = v
               x
             end
-            Hashie::Mash.new(new_response)
+            return new_response
           end
         else
           JSON.load(response)

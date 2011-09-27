@@ -3,7 +3,6 @@ require 'spec_helper'
 describe CF do
   context "configuration" do
     it "be able to configure the api key" do
-      API_CONFIG = YAML.load_file(File.expand_path("../../fixtures/api_credentials.yml", __FILE__))
       CF.configure do |config|
         config.account_name = API_CONFIG['account_name']
         config.api_version = API_CONFIG['api_version']

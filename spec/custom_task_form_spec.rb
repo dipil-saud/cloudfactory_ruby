@@ -3,8 +3,7 @@ require 'spec_helper'
 describe CF::CustomTaskForm do
   context "create a Custom Task Form" do
     it "in block DSL way" do
-      # WebMock.allow_net_connect!
-      VCR.use_cassette "custom-task-form/block/create", :record => :new_episodes do
+      WebMock.allow_net_connect!
       html =   '<div id="form-content">
                   <div id="instructions">
                     <ul>
@@ -32,7 +31,7 @@ describe CF::CustomTaskForm do
                   </div>
                 </div>'
                 
-        css = '<style>body {background:#fbfbfb;}
+      css = '<style>body {background:#fbfbfb;}
                 #instructions{
                   text-align:center;
                 }
@@ -55,7 +54,7 @@ describe CF::CustomTaskForm do
                   margin:4px;
                 }</style>'
                 
-        javascript = '<script src="http://code.jquery.com/jquery-latest.js"></script>
+      javascript = '<script src="http://code.jquery.com/jquery-latest.js"></script>
                       <script type="text/javascript" src="http://www.bizcardarmy.com/javascripts/jquery.autocomplete-min.js"></script>
                       <script type="text/javascript">
                         $(document).ready(function(){
@@ -74,26 +73,26 @@ describe CF::CustomTaskForm do
                         });
                       </script>'
 
-      
-        line = CF::Line.create("Digitizecustomform11", "Digitization") do
-          CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
-          CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
-          CF::Station.create({:line => self, :type => "work"}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
-            CF::CustomTaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe", :raw_html => html, :raw_css => css, :raw_javascript => javascript})
-          end
+      title = "line_title#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
+      sleep 1
+      line = CF::Line.create(title, "Digitization") do
+        CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
+        CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
+        CF::Station.create({:line => self, :type => "work"}) do |s|
+          CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+          CF::CustomTaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe", :raw_html => html, :raw_css => css, :raw_javascript => javascript})
         end
-        line.title.should eql("Digitizecustomform11")
-        line.department_name.should eql("Digitization")
-        line.stations.first.type.should eql("WorkStation")
-        CGI.unescape_html(line.stations.first.form.raw_html).should eql(html)
-        CGI.unescape_html(line.stations.first.form.raw_css).should eql(css)
-        CGI.unescape_html(line.stations.first.form.raw_javascript).should eql(javascript)
       end
+      line.title.should eql(title)
+      line.department_name.should eql("Digitization")
+      line.stations.first.type.should eql("WorkStation")
+      CGI.unescape_html(line.stations.first.form.raw_html).should eql(html)
+      CGI.unescape_html(line.stations.first.form.raw_css).should eql(css)
+      CGI.unescape_html(line.stations.first.form.raw_javascript).should eql(javascript)
     end
     
     it "in plain ruby way" do
-      VCR.use_cassette "custom-task-form/plain/create", :record => :new_episodes do
+      WebMock.allow_net_connect!
       html =   '<form><div id="form-content">
                   <div id="instructions">
                     <ul>
@@ -121,7 +120,7 @@ describe CF::CustomTaskForm do
                   </div>
                 </div></form>'
                 
-        css = '<style>body {background:#fbfbfb;}
+      css = '<style>body {background:#fbfbfb;}
                 #instructions{
                   text-align:center;
                 }
@@ -162,36 +161,35 @@ describe CF::CustomTaskForm do
                           });
                         });
                       </script>'
+      title = "line_title#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
+      sleep 1
+      line = CF::Line.new(title, "Digitization")
       
-        line = CF::Line.new("Digitizeplainruby111", "Digitization")
-        
-        input_format_1 = CF::InputFormat.new({:name => "Name", :required => true, :valid_format => "general"})
-        input_format_2 = CF::InputFormat.new({:name => "Contact", :required => true, :valid_type => "url"})
-        line.input_formats input_format_1
-        line.input_formats input_format_2
-        
-        station = CF::Station.new({:type => "work"})
-        line.stations station
-        
-        worker = CF::HumanWorker.new({:number => 1, :reward => 20})
-        line.stations.first.worker = worker
+      input_format_1 = CF::InputFormat.new({:name => "Name", :required => true, :valid_format => "general"})
+      input_format_2 = CF::InputFormat.new({:name => "Contact", :required => true, :valid_type => "url"})
+      line.input_formats input_format_1
+      line.input_formats input_format_2
+      
+      station = CF::Station.new({:type => "work"})
+      line.stations station
+      
+      worker = CF::HumanWorker.new({:number => 1, :reward => 20})
+      line.stations.first.worker = worker
 
-        form = CF::CustomTaskForm.new({:title => "Enter text from a business card image", :instruction => "Describe", :raw_html => html, :raw_css => css, :raw_javascript => javascript})
-        line.stations.first.form = form
-        line.title.should eql("Digitizeplainruby111")
-        line.department_name.should eql("Digitization")
-        line.stations.first.type.should eql("WorkStation")
-        CGI.unescape_html(line.stations.first.form.raw_html).should eql(html)
-        CGI.unescape_html(line.stations.first.form.raw_css).should eql(css)
-        CGI.unescape_html(line.stations.first.form.raw_javascript).should eql(javascript)
-      end
+      form = CF::CustomTaskForm.new({:title => "Enter text from a business card image", :instruction => "Describe", :raw_html => html, :raw_css => css, :raw_javascript => javascript})
+      line.stations.first.form = form
+      line.title.should eql(title)
+      line.department_name.should eql("Digitization")
+      line.stations.first.type.should eql("WorkStation")
+      CGI.unescape_html(line.stations.first.form.raw_html).should eql(html)
+      CGI.unescape_html(line.stations.first.form.raw_css).should eql(css)
+      CGI.unescape_html(line.stations.first.form.raw_javascript).should eql(javascript)
     end
   end
   
   context "create a Custom Task Form for Error Handling;" do
-      it "creating with invalid Html content" do
-      # WebMock.allow_net_connect!
-      VCR.use_cassette "custom-task-form/block/invalid-html-content", :record => :new_episodes do
+    it "creating with invalid Html content" do
+      WebMock.allow_net_connect!
       html =   '<div id="form-content">
                   <div id="instructions">
                     <ul>
@@ -218,23 +216,23 @@ describe CF::CustomTaskForm do
                     </div>
                   </div>
                 </div>'
-        line = CF::Line.create("Digitizecustomform111", "Digitization") do
-          CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
-          CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
-          CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
-            CF::CustomTaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe", :raw_html => html})
-          end
+      title = "line_title#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
+      sleep 1
+      line = CF::Line.create(title, "Digitization") do
+        CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
+        CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
+        CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
+          CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+          CF::CustomTaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe", :raw_html => html})
         end
-        line.title.should eql("Digitizecustomform111")
-        line.department_name.should eql("Digitization")
-        line.stations.first.form.errors.should eql(["Raw html should contain a Form tag", "Raw html The name 'final_output[first_name]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[middle_name]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[last_name]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[email]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[phone]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[mobile]' is not valid, it should be of format output[name]"])
       end
+      line.title.should eql(title)
+      line.department_name.should eql("Digitization")
+      line.stations.first.form.errors.should eql(["Raw html should contain a Form tag", "Raw html The name 'final_output[first_name]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[middle_name]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[last_name]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[email]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[phone]' is not valid, it should be of format output[name]", "Raw html The name 'final_output[mobile]' is not valid, it should be of format output[name]"])
     end
     
     it "creating without title" do
-      # WebMock.allow_net_connect!
-      VCR.use_cassette "custom-task-form/block/without-title", :record => :new_episodes do
+      WebMock.allow_net_connect!
       html =   '<div id="form-content">
                   <div id="instructions">
                     <ul>
@@ -261,23 +259,24 @@ describe CF::CustomTaskForm do
                     </div>
                   </div>
                 </div>'
-        line = CF::Line.create("Digitizecustomform112", "Digitization") do
-          CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
-          CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
-          CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
-            CF::CustomTaskForm.create({:station => s, :instruction => "Describe", :raw_html => html})
-          end
+                
+      title = "line_title#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
+      sleep 1
+      line = CF::Line.create(title, "Digitization") do
+        CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
+        CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
+        CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
+          CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+          CF::CustomTaskForm.create({:station => s, :instruction => "Describe", :raw_html => html})
         end
-        line.title.should eql("Digitizecustomform112")
-        line.department_name.should eql("Digitization")
-        line.stations.first.form.errors.should eql(["Title can't be blank", "Raw html should contain a Form tag"])
       end
+      line.title.should eql(title)
+      line.department_name.should eql("Digitization")
+      line.stations.first.form.errors.should eql(["Title can't be blank", "Raw html should contain a Form tag"])
     end
     
     it "creating without instruction" do
-      # WebMock.allow_net_connect!
-      VCR.use_cassette "custom-task-form/block/without-instruction", :record => :new_episodes do
+      WebMock.allow_net_connect!
       html =   '<div id="form-content">
                   <div id="instructions">
                     <ul>
@@ -304,55 +303,57 @@ describe CF::CustomTaskForm do
                     </div>
                   </div>
                 </div>'
-        line = CF::Line.create("Digitizecustomform113", "Digitization") do
-          CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
-          CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
-          CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
-            CF::CustomTaskForm.create({:station => s, :title => "title", :raw_html => html})
-          end
+                
+      title = "line_title#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
+      sleep 1
+      line = CF::Line.create(title, "Digitization") do
+        CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
+        CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
+        CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
+          CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+          CF::CustomTaskForm.create({:station => s, :title => "title", :raw_html => html})
         end
-        line.title.should eql("Digitizecustomform113")
-        line.department_name.should eql("Digitization")
-        line.stations.first.form.errors.should eql(["Instruction can't be blank", "Raw html should contain a Form tag"])
       end
+      line.title.should eql(title)
+      line.department_name.should eql("Digitization")
+      line.stations.first.form.errors.should eql(["Instruction can't be blank", "Raw html should contain a Form tag"])
     end
     
     it "creating without any html data" do
-      # WebMock.allow_net_connect!
-      VCR.use_cassette "custom-task-form/block/without-html", :record => :new_episodes do
-        line = CF::Line.create("Digitizecustomform114", "Digitization") do
-          CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
-          CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
-          CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
-            CF::CustomTaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"})
-          end
+      WebMock.allow_net_connect!
+      title = "line_title#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
+      sleep 1
+      line = CF::Line.create(title, "Digitization") do
+        CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
+        CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
+        CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
+          CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
+          CF::CustomTaskForm.create({:station => s, :title => "Enter text from a business card image", :instruction => "Describe"})
         end
-        line.title.should eql("Digitizecustomform114")
-        line.department_name.should eql("Digitization")
-        line.stations.first.form.errors.should eql(["Raw html is required"])
       end
+      line.title.should eql(title)
+      line.department_name.should eql("Digitization")
+      line.stations.first.form.errors.should eql(["Raw html is required"])
     end
     
     it "creating without any html data in plain ruby way" do
-      # WebMock.allow_net_connect!
-      VCR.use_cassette "custom-task-form/plain/without-html", :record => :new_episodes do
-        line = CF::Line.create("Digitizecustomform115", "Digitization") do
-          CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
-          CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
-          CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
-            CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
-          end
+      WebMock.allow_net_connect!
+      title = "line_title#{Time.new.strftime('%Y%b%d-%H%M%S')}".downcase
+      sleep 1
+      line = CF::Line.create(title, "Digitization") do
+        CF::InputFormat.new({:line => self, :name => "Name", :required => true, :valid_format => "general"})
+        CF::InputFormat.new({:line => self, :name => "Contact", :required => true, :valid_type => "url"})
+        CF::Station.create({:line => self, :type => "work", :max_judges => 10, :auto_judge => true}) do |s|
+          CF::HumanWorker.new({:station => s, :number => 1, :reward => 20})
         end
-        
-        form = CF::CustomTaskForm.create({:title => "Enter text from a business card image", :instruction => "Describe"})
-        line.stations.first.form = form
-        
-        line.title.should eql("Digitizecustomform115")
-        line.department_name.should eql("Digitization")
-        line.stations.first.form.errors.should eql(["Raw html is required"])
       end
+
+      form = CF::CustomTaskForm.create({:title => "Enter text from a business card image", :instruction => "Describe"})
+      line.stations.first.form = form
+
+      line.title.should eql(title)
+      line.department_name.should eql("Digitization")
+      line.stations.first.form.errors.should eql(["Raw html is required"])
     end
   end
 end

@@ -34,9 +34,7 @@ module CF
         resp.to_hash.each_pair do |k,v|
           self.send("#{k}=",v) if self.respond_to?(k)
         end
-        if resp.code != 200
-          self.errors = resp.error.message
-        end
+        self.errors = resp['error']['message'] if resp['code'] != 200
         @station.form = self
       end
     end
