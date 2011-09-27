@@ -45,11 +45,11 @@ module Cf # :nodoc: all
       set_target_uri(false)
       resp = CF::Account.login(email, passwd)
 
-      if resp.error.blank? and resp.api_key.present?
-        File.open(config_file, 'w') {|f| f.write("#Don't change this file unless you know what you're doing\n" + { :target_url => CF.api_url, :api_version => CF.api_version, :api_key => resp.api_key, :account_name => resp.account_name, :email => email.strip }.to_yaml) }
+      if resp['error'].blank? and resp['api_key'].present?
+        File.open(config_file, 'w') {|f| f.write("#Don't change this file unless you know what you're doing\n" + { :target_url => CF.api_url, :api_version => CF.api_version, :api_key => resp['api_key'], :account_name => resp['account_name'], :email => email.strip }.to_yaml) }
         say("\nNow you're logged in.\nTo get started, run cf help\n", :green)
       else
-        say("\n#{resp.error.message}\nTry again with valid one.\n", :red)
+        say("\n#{resp['error']['message']}\nTry again with valid one.\n", :red)
       end
     end
 
@@ -113,7 +113,7 @@ module Cf # :nodoc: all
         set_api_key(yaml_source)
         CF.account_name = CF::Account.info.name
         run = CF::Run.find(run_title)
-        if run.errors.blank?
+        if run['errors'].blank?
           say("Fetching output for run: #{run_title}", :green)
 
           if options[:station_index].present?
@@ -123,13 +123,9 @@ module Cf # :nodoc: all
             # Ouput for the whole production run
             output = CF::Run.final_output(run_title)
           end
-          res_array = []
-          output.each do |o|
-            res_array << o.to_hash
-          end
-          if !res_array.empty?
-            res_array.each 
-            csv_str = CSVHash(res_array,res_array.first.keys)
+          if !output.empty?
+            output.each 
+            csv_str = CSVHash(output,output.first.keys)
             csv_str = csv_str.gsub("\"\"", '"')
             FileUtils.mkdir("#{line_source}/output") unless Dir.exist?("#{line_source}/output") if RUBY_VERSION > "1.9"
             FileUtils.mkdir("#{line_source}/output") unless File.directory?("#{line_source}/output") if RUBY_VERSION < "1.9"
@@ -140,7 +136,7 @@ module Cf # :nodoc: all
             say("Run not completed yet", :red)
           end
         else
-          say("Error: #{run.errors.inspect}", :red)
+          say("Error: #{run['errors'].inspect}", :red)
         end
 
       else

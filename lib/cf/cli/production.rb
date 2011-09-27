@@ -20,7 +20,7 @@ module Cf # :nodoc: all
 
       set_target_uri(options[:live])
       set_api_key
-      CF.account_name = CF::Account.info.name
+      CF.account_name = CF::Account.info['name']
 
       if options[:line].present?
         line = CF::Line.find(options[:line])
@@ -116,7 +116,7 @@ module Cf # :nodoc: all
     def list
       set_target_uri(options[:live])
       set_api_key
-      CF.account_name = CF::Account.info.name
+      CF.account_name = CF::Account.info['name']
       param = {}
       current_page = 1
 
@@ -181,15 +181,15 @@ module Cf # :nodoc: all
     def resume
       set_target_uri(false)
       set_api_key
-      CF.account_name = CF::Account.info.name
+      CF.account_name = CF::Account.info['name']
       result = CF::Run.resume(options['run_title'].parameterize)
 
-      if result.error.present?
-        say("Error: #{result.error.message}", :red) and exit(1)
+      if result['error'].present?
+        say("Error: #{result['error']['message']}", :red) and exit(1)
       end
 
       # if result.status == "resumed"
-      say("Run with title \"#{result.title}\" is resumed!", :green)
+      say("Run with title \"#{result['title']}\" is resumed!", :green)
       # end
     end   
 
@@ -200,7 +200,7 @@ module Cf # :nodoc: all
     def add_units
       set_target_uri(options[:live])
       set_api_key
-      CF.account_name = CF::Account.info.name
+      CF.account_name = CF::Account.info['name']
       run_title = options[:run_title].parameterize
       input_data = options[:input_data].presence
 
@@ -213,10 +213,14 @@ module Cf # :nodoc: all
         input_data_file = "#{Dir.pwd}/#{input_data}"
       end
       units = CF::Run.add_units({:run_title => run_title, :file => input_data_file})
-      if units['error'].present?
-        say("Error: #{units['error']['message']}", :red) and exit(1)
+      if units.nil?
+        say("Error: Invalid File!", :red) and exit(1)
+      else
+        if units['error'].present? 
+          say("Error: #{units['error']['message']}", :red) and exit(1)
+        end
+        say("\"#{units['successfull']}\"!", :green)
       end
-      say("\"#{units['successfull']}\"!", :green)
     end 
 
     desc "production delete", "Deletes created Production Run"
@@ -224,14 +228,14 @@ module Cf # :nodoc: all
     def delete
       set_target_uri(false)
       set_api_key
-      CF.account_name = CF::Account.info.name
+      CF.account_name = CF::Account.info['name']
       run_title = options[:run_title].parameterize
       
       deleted_run = CF::Run.destroy(run_title)
-      if deleted_run.error.present?
-        say("Error: #{deleted_run.error.message}", :red) and exit(1)
+      if deleted_run['error'].present?
+        say("Error: #{deleted_run['error']['message']}", :red) and exit(1)
       end
-      say("Run Deleted Successfully entitled: \"#{deleted_run.title}\"!", :green)
+      say("Run Deleted Successfully entitled: \"#{deleted_run['title']}\"!", :green)
     end 
   end
 end

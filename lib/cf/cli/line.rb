@@ -61,13 +61,13 @@ module Cf # :nodoc: all
         say("The line.yml file does not exist in this directory", :red) and exit(1) unless File.exist?(yaml_source)
         set_target_uri(false)
         set_api_key(yaml_source)
-        CF.account_name = CF::Account.info.name
+        CF.account_name = CF::Account.info['name']
         line_dump = YAML::load(File.read(yaml_source).strip)
         line_title = line_dump['title'].parameterize
       else
         set_target_uri(false)
         set_api_key
-        CF.account_name = CF::Account.info.name
+        CF.account_name = CF::Account.info['name']
         line_title = options['line'].parameterize
       end
 
@@ -92,7 +92,7 @@ module Cf # :nodoc: all
             say("\n")
             if delete_forcefully
               resp = CF::Line.destroy(line_title, :forced => true)
-              if resp.code != 200
+              if resp['code'] != 200
                 say("Error: #{resp.error.message}\n", :red)
               else
                 say("The line #{line_title} deleted successfully!\n", :yellow)
@@ -114,8 +114,8 @@ module Cf # :nodoc: all
       # method to call with line title to delete the line if validation fails during the creation of line
       def rollback(line_title)
         deleted_resp = CF::Line.destroy(line_title)
-        if !deleted_resp.error.nil?
-          if deleted_resp.error.message == "Cannot delete line. You have production runs using this line. Pass force option to enforce deletion."
+        if !deleted_resp['error'].nil?
+          if deleted_resp['error']['message'] == "Cannot delete line. You have production runs using this line. Pass force option to enforce deletion."
             say("!!! Warning !!!\nThe following are the existing production runs based on this line.", :yellow)
             existing_runs = Cf::Production.new([],{'line' => line_title, 'all' => true})
             existing_runs.list
@@ -125,7 +125,7 @@ module Cf # :nodoc: all
             say("\n")
             if delete_forcefully
               resp = CF::Line.destroy(line_title, :forced => true)
-              if resp.code != 200
+              if resp['code'] != 200
                 say("Error: #{resp.error.message}\n", :red)
               end
             else
@@ -163,7 +163,7 @@ module Cf # :nodoc: all
       set_target_uri(false)
       set_api_key(yaml_source)
 
-        CF.account_name = CF::Account.info.name
+        CF.account_name = CF::Account.info['name']
 
         line_dump = YAML::load(File.read(yaml_source).strip)
         line_title = line_dump['title'].parameterize
@@ -172,14 +172,14 @@ module Cf # :nodoc: all
         line_public = line_dump['public']
         
         line = CF::Line.info(line_title)
-        if line.error.blank? && options.force? 
+        if line['error'].blank? && options.force? 
           rollback(line.title)
-        elsif line.error.blank?
+        elsif line['error'].blank?
           say("This line already exist.", :yellow)
           override = agree("Do you want to override? [y/n] ")
           if override
             say("Deleting the line forcefuly..", :yellow)
-            rollback(line.title)
+            rollback(line['title'])
           else
             say("Line creation aborted!!", :yellow) and exit(1)
           end
@@ -324,7 +324,7 @@ module Cf # :nodoc: all
 
       set_target_uri(false)
       set_api_key(yaml_source)
-      CF.account_name = CF::Account.info.name
+      CF.account_name = CF::Account.info['name']
       
       if options.all
         resp_lines = CF::Line.all(:page => 'all')
@@ -375,14 +375,14 @@ module Cf # :nodoc: all
         say("The line.yml file does not exist in this directory", :red) and exit(1) unless File.exist?(yaml_source)
         set_target_uri(false)
         set_api_key(yaml_source)
-        CF.account_name = CF::Account.info.name
+        CF.account_name = CF::Account.info['name']
 
         line_dump = YAML::load(File.read(yaml_source).strip)
         line_title = line_dump['title'].parameterize
       else
         set_target_uri(false)
         set_api_key
-        CF.account_name = CF::Account.info.name
+        CF.account_name = CF::Account.info['name']
         line_title = options['line'].parameterize
       end
       
