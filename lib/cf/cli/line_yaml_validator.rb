@@ -1,8 +1,9 @@
 module Cf
   module LineYamlValidator
 
-    def validate(yaml_path)
-        line_dump = YAML::load(File.read(yaml_path).strip)
+    def validate(yaml_source, source_is_a_file = true) # either provide yaml path or actual yaml content as string
+        yaml = source_is_a_file ? File.read(yaml_source).strip : yaml_source[:line_yaml]
+        line_dump = YAML::load(yaml)
         errors = []
         # Checking Department
         if line_dump['department'].nil?
@@ -51,15 +52,11 @@ module Cf
                     errors << "Reward for Jury worker is missing in block of Tournament Station #{i+1}!" if reward.nil?
                     errors << "Reward Must be greater than 0 in Block station #{i+1}!" if !reward.nil? && reward < 1
                   end
-                  acceptance_ratio = station['station']['acceptance_ratio']
-                  if !acceptance_ratio.nil?
-                    errors << "Acceptance ratio must lie between 0 and 1 in Block station #{i+1}!" if acceptance_ratio > 1 or acceptance_ratio < 0
-                  end
                 end
                 # Checking Worker
                 worker = station['station']['worker']
                 if worker.class != Hash
-                  errors << "Worker is missing in Block station #{i+1}!" 
+                  errors << "Worker is missing in Block station #{i+1}!"
                 elsif worker.class == Hash
                   # Checking Worker type
                   worker.each_pair do |k, v|
@@ -69,14 +66,14 @@ module Cf
                   if worker_type.nil?
                     errors << "Worker Type is missing!"
                   else
-                    if worker_type != "human" 
+                    if worker_type != "human"
                       errors << "Worker type is invalid in Block station #{i+1}!" if worker_type.split("_").last != "robot"
                       if worker_type.split("_").last == "robot"
                         settings = worker['settings']
                         errors << "Settings for the robot worker is missing in Block station #{i+1}!" if settings.nil?
                         errors << "Settings for the robot worker is invalid in Block station #{i+1}!" if settings.class != Hash
                       end
-                    elsif worker_type == "human" 
+                    elsif worker_type == "human"
                       # Checking number of workers if worker_type == "human"
                       num_workers = worker['num_workers']
                       if num_workers.nil?
@@ -88,7 +85,7 @@ module Cf
                       # Checking reward of workers if worker_type == "human"
                       reward = worker['reward']
                       if reward.nil?
-                        errors << "Reward of workers not specified in Block station #{i+1}!" 
+                        errors << "Reward of workers not specified in Block station #{i+1}!"
                       else
                         errors << "Reward of workers must be greater than 0 in Block station #{i+1}!" if reward < 1
                       end
@@ -139,12 +136,17 @@ module Cf
 
                         instruction = custom_task_form['instruction']
                         errors << "Form Instruction is missing in Block station #{i+1}!" if instruction.nil?
-                      
-                        errors << "station_#{i+1} folder is missing! Create station_#{i+1} folder in #{Dir.pwd}" if !File.exist?("#{Dir.pwd}/station_#{i+1}")
-                      
-                        if File.exist?("#{Dir.pwd}/station_#{i+1}")
-                          station_source = "#{Dir.pwd}/station_#{i+1}"
-                          errors << "form.html is missing in folder #{Dir.pwd}/station_#{i+1} !" if !File.exist?("#{station_source}/form.html")
+                        if source_is_a_file
+                          errors << "station_#{i+1} folder is missing! Create station_#{i+1} folder in #{Dir.pwd}" if !File.exist?("#{Dir.pwd}/station_#{i+1}")
+                          if File.exist?("#{Dir.pwd}/station_#{i+1}")
+                            station_source = "#{Dir.pwd}/station_#{i+1}"
+                            errors << "form.html is missing in folder #{Dir.pwd}/station_#{i+1} !" if !File.exist?("#{station_source}/form.html")
+                          end
+                        else
+                          form_html_label = custom_task_form['html']
+                          if form_html_label.blank? || yaml_source[form_html_label].blank?
+                            errors << "Custom Task Form HTML is missing for station #{i+1}!"
+                          end
                         end
                       end
                     elsif task_form.class == Hash
@@ -164,7 +166,7 @@ module Cf
                           required = form_field['required']
                           field_type = form_field['field_type']
                           if !field_type.nil?
-                            unless %w(short_answer long_answer radio_button check_box select_box).include?(field_type)
+                            unless %w(short_answer long_answer radio_button check_box select_box date email number).include?(field_type)
                               errors << "Field Type of Form Field is invalid in Block #{index+1} of station Block #{i+1}!"
                             end
                             if field_type == "radio_button" || field_type == "select_box"
@@ -173,7 +175,7 @@ module Cf
                                 errors << "Option values is required for field_type => #{field_type} in block #{index+1} of Form Field within Station #{i+1} !"
                               elsif !option_values.nil?
                                 if option_values.class != Array
-                                  errors << "Option values must be an array for field_type => #{field_type} in block #{index+1} of Form Field within Station #{i+1}!"  
+                                  errors << "Option values must be an array for field_type => #{field_type} in block #{index+1} of Form Field within Station #{i+1}!"
                                 end
                               end
                             end
@@ -193,3 +195,4 @@ module Cf
     end
   end
 end
+
